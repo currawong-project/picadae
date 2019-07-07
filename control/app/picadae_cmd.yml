@@ -1,0 +1,8 @@
+{
+ picadae_cmd:
+   {
+     serial_dev: "/dev/ttyACM0",
+     serial_baud: 38400,
+     
+   }
+}
