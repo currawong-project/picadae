@@ -3,7 +3,7 @@ TTY=/dev/ttyACM0
 endif
 
 ifndef TARGET
-TARGET=blink
+TARGET=i2c_timer_pwm
 endif
 
 MCU=attiny85
