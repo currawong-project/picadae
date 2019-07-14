@@ -120,10 +120,14 @@ class App:
                 print("in:",msg[1])
 
 
-    def _parse_error( self, msg ):
+    def _parse_error( self, msg, cmd_str=None ):
+
+        if cmd_str:
+            msg += " Command:{}".format(cmd_str)
+            
         return (None,msg)
 
-    def _parse_int( self, token, var_label, max_value ):
+    def _parse_int( self, token, var_label, min_value, max_value ):
         # convert the i2c destination address to an integer
         try:
             int_value = int(token)
@@ -131,10 +135,74 @@ class App:
             return self._parse_error("Synax error: '{}' is not a legal integer.".format(token))
 
         # validate the i2c address value
-        if 0 > int_value or int_value > max_value:
+        if min_value > int_value or int_value > max_value:
             return self._parse_error("Syntax error: '{}' {} out of range 0 to {}.".format(token,int_value,max_value))
 
         return (int_value,None)
+    
+    def parse_app_cmd( self, cmd_str ):
+        """
+        Command syntax <opcode> <remote_i2c_addr> <value>
+        """
+        
+        op_tok_idx  = 0
+        i2c_tok_idx = 1
+        val_tok_idx = 2
+        
+        cmdD = {
+            'p':{ 'reg':0, 'n':1, 'min':0, 'max':4 },       # timer pre-scalar: sets timer tick rate
+            't':{ 'reg':1, 'n':2, 'min':0, 'max':10e7 },    # microseconds
+            'd':{ 'reg':3, 'n':1, 'min':0, 'max':100 },    # pwm duty cylce (0-100%)
+            'f':{ 'reg':4, 'n':1, 'min':1, 'max':5 },       # pwm frequency divider 1=1,2=8,3=64,4=256,5=1024
+            }
+
+        cmd_str = cmd_str.strip()
+
+        tokenL = cmd_str.split(' ')
+
+        # validate the counf of tokens
+        if len(tokenL) != 3:
+            return self._parse_error("Syntax error: Invalid token count.",cmd_str)
+
+        opcode = tokenL[op_tok_idx]
+        
+        # validate the opcode
+        if opcode not in cmdD:
+            return self._parse_error("Syntax error: Invalid opcode.",cmd_str)
+
+        # convert the i2c destination address to an integer
+        i2c_addr, msg = self._parse_int( tokenL[i2c_tok_idx], "i2c address", 0,127 )
+
+        if i2c_addr is None:
+            return (None,msg)
+
+        d = cmdD[ opcode ]
+        
+        # get the value
+        value, msg = self._parse_int( tokenL[val_tok_idx], "command value", d['min'], d['max'] )
+
+        if value is None:
+            return (value,msg)
+
+        dataL = [ value ]
+
+        if opcode == 't':
+            
+            coarse = int(value/(32*254))
+            fine   = int((value - coarse*32*254)/32)
+            dataL  = [ coarse, fine ]
+
+        elif opcode == 'd':
+            dataL = [ int(value * 255 / 100.0) ]
+
+        cmd_bV = bytearray( [ ord('w'), i2c_addr, d['reg'], len(dataL) ] + dataL )
+
+        if False:
+            print('cmd_bV:')
+            for x in cmd_bV:
+                print(int(x))
+
+        return (cmd_bV,None)
     
     def parse_cmd( self, cmd_str ):
 
@@ -143,7 +211,11 @@ class App:
         reg_tok_idx = 2
         rdn_tok_idx = 3
         
-        cmd_str.strip()
+        cmd_str = cmd_str.strip()
+
+        # if this is a high level command
+        if cmd_str[0] not in ['r','w']:
+            return self.parse_app_cmd( cmd_str )
 
         # convert the command string to tokens
         tokenL = cmd_str.split(' ')
@@ -163,16 +235,16 @@ class App:
         if op_code == 'r' and len(tokenL) != 4:
             return self._parse_error("Syntax error: Illegal read syntax.")
 
-        if op_code == 'w' and len(tokenL) == 4:
+        if op_code == 'w' and len(tokenL) < 4:
             return self._parse_error("Syntax error: Illegal write command too short.")
 
         # convert the i2c destination address to an integer
-        i2c_addr, msg = self._parse_int( tokenL[i2c_tok_idx], "i2c address", 127 )
+        i2c_addr, msg = self._parse_int( tokenL[i2c_tok_idx], "i2c address", 0,127 )
 
         if i2c_addr is None:
             return (None,msg)
 
-        reg_addr, msg = self._parse_int( tokenL[reg_tok_idx], "reg address", 255 )
+        reg_addr, msg = self._parse_int( tokenL[reg_tok_idx], "reg address", 0, 255 )
 
         if reg_addr is None:
             return (None,msg)
@@ -181,7 +253,7 @@ class App:
 
         # parse and validate the count of bytes to read
         if op_code == 'r':
-            op_byteN, msg = self._parse_int( tokenL[ rdn_tok_idx ], "read byte count", 255 )
+            op_byteN, msg = self._parse_int( tokenL[ rdn_tok_idx ], "read byte count", 0, 255 )
 
             if op_byteN is None:
                 return (None,msg)
@@ -191,7 +263,7 @@ class App:
         elif op_code == 'w':
 
             for j,i in enumerate(range(reg_tok_idx+1,len(tokenL))):
-                value, msg = self._parse_int( tokenL[i], "write value: %i" % (j), 255 )
+                value, msg = self._parse_int( tokenL[i], "write value: %i" % (j), 0, 255 )
                 
                 if value is None:
                     return (None,msg)
@@ -238,7 +310,7 @@ class App:
 
                 # if a serial msg was received
                 if msg is not None and msg[0] == DATA_MSG:
-                    print("ser:",msg[1])
+                    print("ser:",msg[1],int(msg[1][0]))
             
             
         self.serialProc.quit()
@@ -252,7 +324,7 @@ def parse_args():
     ap = argparse.ArgumentParser(description=descStr)
 
 
-    ap.add_argument("-s","--setup",                     default="cfg/p_ac.yml",  help="YAML configuration file.")
+    ap.add_argument("-s","--setup",                     default="picadae_cmd.yml",  help="YAML configuration file.")
     ap.add_argument("-c","--cmd",   nargs="*",                                   help="Give a command as multiple tokens")
     ap.add_argument("-r","--run",                                                help="Run a named command list from the setup file.")
     ap.add_argument("-l","--log_level",choices=logL,     default="warning",      help="Set logging level: debug,info,warning,error,critical. Default:warning")

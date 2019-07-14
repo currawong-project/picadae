@@ -12,8 +12,8 @@
 
 enum
 {
- kCS13_10_idx     = 0,  // Timer 1 Prescalar (CS13,CS12,CS11,CS10) from Table 12-5 pg 89
- kTmr0_Coarse_idx = 1,  // count of times timer0 count to 255 before OCR1C is set to Tmr0_Minor
+ kCS13_10_idx     = 0,  // Timer 1 Prescalar (CS13,CS12,CS11,CS10) from Table 12-5 pg 89 (0-15)  prescaler = pow(2,val-1), 0=stop,1=1,2=2,3=4,4=8,....14=8192,15=16384  pre_scaled_hz = clock_hz/value
+ kTmr0_Coarse_idx = 1,  // count of times timer0 count to 255 before OCR1C is set to Tmr0_Fine
  kTmr0_Fine_idx   = 2,  // OCR1C timer match value
  kPWM_Duty_idx    = 3,  //
  kPWM_Freq_idx    = 4,  // 1-4 = clock divider=1=1,2=8,3=64,4=256,5=1024
@@ -21,9 +21,9 @@ enum
 
 volatile uint8_t ctl_regs[] =
 {
- 0x0f,   // 0 (0-15)  timer prescalar 0=stop, prescaler = pow(2,val-1), 0=stop,1=1,2=2,3=4,4=8,....14=8192,15=16384  pre_scaled_hz = clock_hz/value
- 0,      // 1 (0-255) Tmr0_Coarse count of times timer count to 255 before loading Tmr0_Minor for final count.
- 244,    // 2 (0-254) Tmr0_Fine OCR1C value on final phase before triggering timer
+   9,    // 0  9=32 us period w/ 8Mhz clock (timer tick rate) 
+ 123,    // 1 (0-255) Tmr0_Coarse count of times timer count to 255 before loading Tmr0_Minor for final count.
+   8,    // 2 (0-254) Tmr0_Fine OCR1C value on final phase before triggering timer
  127,    // 3 (0-255) Duty cycle
  4,      // 4 (1-4)   PWM Frequency (clock pre-scaler) 
 };
@@ -32,9 +32,47 @@ volatile uint8_t ctl_regs[] =
 volatile uint8_t reg_position = 0;
 const uint8_t reg_size = sizeof(ctl_regs);
 
+volatile uint8_t tmr_state        = 0;    
+volatile uint8_t tmr_coarse_cur   = 0;
+
+void tmr_reset()
+{
+  if( ctl_regs[kTmr0_Coarse_idx] > 0 )
+  {
+    tmr_state = 1;
+    OCR1C     = 254;
+  }
+  else
+  {
+    tmr_state = 2;
+    OCR1C     = ctl_regs[kTmr0_Fine_idx];
+  }
+  
+  tmr_coarse_cur = 0;  
+}
+
 ISR(TIMER1_OVF_vect)
 {
-  PINB = _BV(PINB4) + _BV(PINB1);  // writes to PINB toggle the pins
+  switch( tmr_state )
+  {
+    case 0:
+      break;
+      
+    case 1:
+      if( ++tmr_coarse_cur >= ctl_regs[kTmr0_Coarse_idx] )
+      {
+        tmr_state  = 2;
+        OCR1C     = ctl_regs[kTmr0_Fine_idx];        
+      }
+      break;
+      
+    case 2:
+      PINB = _BV(PINB4) + _BV(PINB1);  // writes to PINB toggle the pins
+
+      tmr_reset();
+      break;
+  }
+  
   
 }
 
@@ -46,8 +84,12 @@ void timer1_init()
   TCCR1  |= _BV(CTC1);      // Reset TCNT1 to 0 when TCNT1==OCR1C 
   TCCR1  |= _BV(PWM1A);     // Enable PWM A
   TCCR1  |= ctl_regs[kCS13_10_idx] & 0x0f;  // 
-  OCR1C   = ctl_regs[kTmr0_Fine_idx];
-  TIMSK  |= _BV(TOIE1);     // Enable interrupt TIMER1_OVF  
+  GTCCR  |= _BV(PSR1);      // Set the pre-scaler to the selected value
+
+  tmr_reset();
+  
+  TIMSK  |= _BV(TOIE1);     // Enable interrupt TIMER1_OVF
+  
 }
 
 void pwm0_update()
@@ -136,9 +178,9 @@ void on_receive( uint8_t byteN )
 
         if( kCS13_10_idx <= reg_position && reg_position <= kTmr0_Fine_idx )
           timer1_init();
-
-        if( kPWM_Duty_idx <= reg_position && reg_position <= kPWM_Freq_idx )
-          pwm0_update();
+        else
+          if( kPWM_Duty_idx <= reg_position && reg_position <= kPWM_Freq_idx )
+            pwm0_update();
 
         
         reg_position++;
