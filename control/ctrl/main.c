@@ -20,7 +20,7 @@ volatile int  ser_buf_i_idx = 0;  // receive buffer input index
 int           ser_buf_o_idx = 0;  // receive buffer output index
 
 // Receive buffer
-char buf[ SER_BUF_N ];
+char ser_buf[ SER_BUF_N ];
 
 
 void uart_init(void)
@@ -105,7 +105,7 @@ void i2c_init()
 ISR(USART_RX_vect)
 {
   // receive the incoming byte
-  buf[ ser_buf_i_idx ] = uart_getchar();
+  ser_buf[ ser_buf_i_idx ] = uart_getchar();
 
   // advance the buffer input index
   ser_buf_i_idx = (ser_buf_i_idx + 1) % SER_BUF_N;  
@@ -141,13 +141,16 @@ int main (void)
   const uint8_t kWaitFl       = 1;
   const uint8_t kSendStopFl   = 1;
   const uint8_t kNoSendStopFl = 0;
+  const uint8_t data_bufN     = 0xff;
   
   char    c;
-  uint8_t state = kWait_for_cmd;
-  char    cmd;
-  uint8_t i2c_addr;
-  uint8_t dev_reg_addr;
-  uint8_t op_byte_cnt;
+  uint8_t state = kWait_for_cmd;  // parser state
+  char    cmd;                    // 'r' or 'w'
+  uint8_t i2c_addr;               // remote i2c address
+  uint8_t dev_reg_addr;           // remote device register address
+  uint8_t op_byte_cnt;            // count of data bytes to send or recv
+  uint8_t data_buf[ data_bufN ];  // hold data during parsing
+  uint8_t data_buf_idx = 0;       // next avail slot in the data buffer
   
   cli();        // mask all interupts
 
@@ -173,14 +176,14 @@ int main (void)
     if( ser_buf_o_idx != ser_buf_i_idx )
     {
       // get the waiting byte
-      c = buf[ser_buf_o_idx];
+      c = ser_buf[ser_buf_o_idx];
 
       // advance the buffer output index
       ser_buf_o_idx = (ser_buf_o_idx+1) % SER_BUF_N;
 
       //  Serial Protocol
-      //  'r', reg-idx, cnt,                      -> i2c_read_from()
-      //  'w', reg-idx, cnt, value0, ... valueN   -> i2c_xmit()
+      //  'r', i2c-addr, reg-idx, cnt,                      -> i2c_read_from()
+      //  'w', i2c-addr, reg-idx, cnt, value0, ... valueN   -> i2c_xmit()
       
       switch(state)
       {
@@ -191,7 +194,7 @@ int main (void)
             state = kWait_for_i2c;
           }
           else
-            uart_putchar('E');
+            uart_putchar('E');  // indicate a protocol error
           break;
 
         case kWait_for_i2c:
@@ -215,15 +218,29 @@ int main (void)
           else
           {
             state = kWait_for_value;
+            data_buf[0] = dev_reg_addr; // make 'dev_reg_addr' the first data value to write
+            data_buf_idx = 1;           // 
+            op_byte_cnt += 1;           // incr op_byte_cnt to account for 'dev_reg_addr' as first byte
+              
           }
           break;
             
         case kWait_for_value:
+          if( data_buf_idx >= data_bufN )
           {
-            uint8_t buf[] = { dev_reg_addr, c };
-                      
-            i2c_xmit( I2C_REMOTE_ADDR, buf, 2, kSendStopFl);
+            uart_putchar('F'); // indicate a buffer overrun
             state = kWait_for_cmd;
+          }
+          else
+          {
+            data_buf[ data_buf_idx++ ] = c;
+          
+            if(data_buf_idx == op_byte_cnt )
+            {
+              
+              i2c_xmit( I2C_REMOTE_ADDR, data_buf, op_byte_cnt, kSendStopFl);
+              state = kWait_for_cmd;
+            }
           }
           break;
             

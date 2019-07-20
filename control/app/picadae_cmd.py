@@ -152,7 +152,7 @@ class App:
         cmdD = {
             'p':{ 'reg':0, 'n':1, 'min':0, 'max':4 },       # timer pre-scalar: sets timer tick rate
             't':{ 'reg':1, 'n':2, 'min':0, 'max':10e7 },    # microseconds
-            'd':{ 'reg':3, 'n':1, 'min':0, 'max':100 },    # pwm duty cylce (0-100%)
+            'd':{ 'reg':3, 'n':1, 'min':0, 'max':100 },     # pwm duty cylce (0-100%)
             'f':{ 'reg':4, 'n':1, 'min':1, 'max':5 },       # pwm frequency divider 1=1,2=8,3=64,4=256,5=1024
             }
 
@@ -190,6 +190,7 @@ class App:
             
             coarse = int(value/(32*254))
             fine   = int((value - coarse*32*254)/32)
+            print(coarse,fine)
             dataL  = [ coarse, fine ]
 
         elif opcode == 'd':
@@ -272,7 +273,6 @@ class App:
                 
             op_byteN = len(dataL)
             
-
         # form the command into a byte array
         cmd_bV = bytearray( [ ord(op_code), i2c_addr, reg_addr, op_byteN ] + dataL )
         
@@ -293,7 +293,7 @@ class App:
             if (i):
                 s = sys.stdin.readline().strip()
                 
-                if s == 'quit':
+                if s == 'quit' or s == 'q':
                     break
                 
                 cmd_bV,err_msg = self.parse_cmd(s)
@@ -310,7 +310,11 @@ class App:
 
                 # if a serial msg was received
                 if msg is not None and msg[0] == DATA_MSG:
-                    print("ser:",msg[1],int(msg[1][0]))
+                    str = ""
+                    for i in range(len(msg[1])):
+                        str += "{} ".format(int(msg[1][i]))
+                        
+                    print("ser:",str)
             
             
         self.serialProc.quit()

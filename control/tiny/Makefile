@@ -22,7 +22,7 @@ all:
 	$(OBJ2HEX) -R .eeprom -O ihex $(TARGET) $(TARGET).hex
 
 burn:
-	$(AVRDUDE) -p $(MCU) -P $(TTY)  -C/etc/avrdude/avrdude.conf -v -c avrisp -b 19200 -U flash:w:$(TARGET).hex -U lfuse:w:0xe2:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
+	$(AVRDUDE) -p $(MCU) -P $(TTY)  -C/etc/avrdude/avrdude.conf -v -c avrisp -b 19200 -U flash:w:$(TARGET).hex -U lfuse:w:0xe2:m -U hfuse:w:0xdd:m -U efuse:w:0xff:m
 clean:
 	rm -f *.hex *.obj *.o
 
