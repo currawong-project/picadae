@@ -1,3 +1,7 @@
+#
+# Usage: make I2C_ADDR=8
+#
+
 ifndef TTY
 TTY=/dev/ttyACM0
 endif
@@ -9,7 +13,7 @@ endif
 MCU=attiny85
 AVRDUDEMCU=t85
 CC=/usr/bin/avr-gcc
-CFLAGS=-g -Os -Wall -mcall-prologues -mmcu=$(MCU)
+CFLAGS=-g -Os -Wall -mcall-prologues -mmcu=$(MCU) -DI2C_SLAVE_ADDRESS=$(I2C_ADDR)
 OBJ2HEX=/usr/bin/avr-objcopy
 AVRDUDE=avrdude
 

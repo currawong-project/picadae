@@ -78,12 +78,12 @@ void i2c_read_from( uint8_t i2c_addr, uint8_t dev_reg_addr, uint8_t read_byte_cn
   // Request to read from the client. Note that 'sendStop'==0.
   // Use this call to tell the client what data should be sent
   // during the subsequent twi_readFrom().
-  twi_writeTo(I2C_REMOTE_ADDR, &dev_reg_addr, 1, kWaitFl, kNoSendStopFl);
+  twi_writeTo(i2c_addr, &dev_reg_addr, 1, kWaitFl, kNoSendStopFl);
 
       
   // Blocking waiting and wait to read the client's response.
   for( uint8_t i=0; i<read_byte_cnt; ++i)
-    if( twi_readFrom(I2C_REMOTE_ADDR, &recv_char, 1, i==read_byte_cnt-1) )
+    if( twi_readFrom(i2c_addr, &recv_char, 1, i==read_byte_cnt-1) )
       uart_putchar(recv_char);
 
   PORTB ^= _BV(PORTB5);   //  toggle LED
@@ -217,6 +217,7 @@ int main (void)
           }
           else
           {
+            // TODO: handle case where there are no data bytes (only e.g. note-off)
             state = kWait_for_value;
             data_buf[0] = dev_reg_addr; // make 'dev_reg_addr' the first data value to write
             data_buf_idx = 1;           // 
@@ -237,8 +238,13 @@ int main (void)
           
             if(data_buf_idx == op_byte_cnt )
             {
+              /*
+              uint8_t ii;
+              for(ii=0; ii<op_byte_cnt; ++ii)
+                uart_putchar( data_buf[ii] );
+              */
               
-              i2c_xmit( I2C_REMOTE_ADDR, data_buf, op_byte_cnt, kSendStopFl);
+              i2c_xmit( i2c_addr, data_buf, op_byte_cnt, kSendStopFl);
               state = kWait_for_cmd;
             }
           }
