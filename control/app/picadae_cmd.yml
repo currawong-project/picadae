@@ -4,7 +4,8 @@
      serial_dev: "/dev/ttyACM0",
      serial_baud: 38400,
      i2c_base_addr: 21,
-     prescaler_usec: 32,
+     prescaler_usec: 16,
+     serial_sync_timeout_ms: 10000,
      
      key_mapL: [
 

@@ -275,6 +275,11 @@ class App:
             
         # form the command into a byte array
         cmd_bV = bytearray( [ ord(op_code), i2c_addr, reg_addr, op_byteN ] + dataL )
+
+        # s = ""
+        # for i in range(len(cmd_bV)):
+        #    s += "%i " % (cmd_bV[i])
+        # print(s)
         
         return (cmd_bV,None)
 

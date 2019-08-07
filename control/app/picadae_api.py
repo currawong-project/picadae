@@ -5,49 +5,62 @@ from multiprocessing import Process, Pipe
 # Message header id's for messages passed between the application
 # process and the microcontroller and video processes
 
-TinyOpD = {
-    'setPwmOp':     0,
-    'noteOnVelOp':  1,
-    'noteOnUsecOp': 2,
-    'noteOffOp':    3,
-    'readOp':       4,
-    'writeOp':      5
-}
+class TinyOp(Enum):
+    setPwmOp     = 0
+    noteOnVelOp  = 1
+    noteOnUsecOp = 2
+    noteOffOp    = 3
+    setReadAddr  = 4
+    writeOp      = 5
+    
 
 class TinyRegAddr(Enum):
-    kRdRegAddrAddr   =  0,
-    kRdTableAddrAddr =  1,
-    kRdEEAddrAddr    =  2,
-    kRdSrcAddr       =  3,
-    kWrRegAddrAddr   =  4,
-    kWrTableAddrAddr =  5,
-    kWrEEAddrAddr    =  6,
-    kWrDstAddr       =  7,
-    kTmrCoarseAddr   =  8,
-    kTmrFineAddr     =  9,
-    kTmrPrescaleAddr = 10, 
-    kPwmEnableAddr   = 11,
-    kPwmDutyAddr     = 12,
-    kPwmFreqAddr     = 13,
-    kModeAddr        = 14,
-    kStateAddr       = 15,
-    kErrorCodeAddr   = 16
+    kRdRegAddrAddr   =  0
+    kRdTableAddrAddr =  1
+    kRdEEAddrAddr    =  2
+    kRdSrcAddr       =  3
+    kWrRegAddrAddr   =  4
+    kWrTableAddrAddr =  5
+    kWrEEAddrAddr    =  6
+    kWrDstAddr       =  7
+    kTmrCoarseAddr   =  8
+    kTmrFineAddr     =  9
+    kTmrPrescaleAddr = 10 
+    kPwmDutyAddr     = 11
+    kPwmFreqAddr     = 12
+    kModeAddr        = 13
+    kStateAddr       = 14
+    kErrorCodeAddr   = 15
 
 class TinyConst(Enum):
-    kRdRegSrcId    = TinyRegAddr.kRdRegAddrAddr,    # 0
-    kRdTableSrcId  = TinyRegAddr.kRdTableAddrAddr,  # 1
-    kRdEESrcId     = TinyRegAddr.kRdEEAddrAddr      # 2
+    kRdRegSrcId    = TinyRegAddr.kRdRegAddrAddr    # 0
+    kRdTableSrcId  = TinyRegAddr.kRdTableAddrAddr  # 1
+    kRdEESrcId     = TinyRegAddr.kRdEEAddrAddr     # 2
     
-    kWrRegDstId    = TinyRegAddr.kWrRegAddrAddr,    # 4
-    kWrTableDstId  = TinyRegAddr.kWrTableAddrAddr,  # 5
-    kWrEEDstId     = TinyRegAddr.kWrEEAddrAddr,     # 6
-    kWrAddrFl      = 0x08,                          # first avail bit above kWrEEAddr
+    kWrRegDstId    = TinyRegAddr.kWrRegAddrAddr    # 4
+    kWrTableDstId  = TinyRegAddr.kWrTableAddrAddr  # 5
+    kWrEEDstId     = TinyRegAddr.kWrEEAddrAddr     # 6
+    kWrAddrFl      = 0x08                          # first avail bit above kWrEEAddr
     
 class SerialMsgId(Enum):
     QUIT_MSG   = 0xffff   
     DATA_MSG   = 0xfffe
 
+class Result(object):
+    def __init__( self, value=None, msg=None ):
+        self.value = value
+        self.msg   = msg
 
+    def set_error( self, msg ):
+        if self.msg is None:
+            self.msg = ""
+            
+        self.msg += " " + msg
+        
+    def __bool__( self ):
+        return self.msg is  None
+
+    
 def _serial_process_func( serial_dev, baud, pipe ):
 
     reset_N     = 0
@@ -100,7 +113,8 @@ class SerialProcess(Process):
         self.parent_end, child_end = Pipe()
         super(SerialProcess, self).__init__(target=_serial_process_func, name="Serial", args=(serial_dev,serial_baud,child_end,))
         self.doneFl    = False
-        
+
+
     def quit(self):
         # send quit msg to the child process
         self.parent_end.send((SerialMsgId.QUIT_MSG,0))
@@ -108,6 +122,7 @@ class SerialProcess(Process):
     def send(self,msg_id,value):
         # send a msg to the child process
         self.parent_end.send((msg_id,value))
+        return Result()
 
     def recv(self):
         # 
@@ -127,7 +142,7 @@ class SerialProcess(Process):
         
 
 class Picadae:
-    def __init__( self, key_mapL, i2c_base_addr=1, serial_dev='/dev/ttyACM0', serial_baud=38400 ):
+    def __init__( self, key_mapL, i2c_base_addr=21, serial_dev='/dev/ttyACM0', serial_baud=38400, prescaler_usec=16 ):
         """
         key_mapL      = [{ index, board, ch, type, midi, class }]  
         serial_dev    = /dev/ttyACM0
@@ -137,65 +152,86 @@ class Picadae:
         self.serialProc     = SerialProcess( serial_dev, serial_baud )
         self.keyMapD        = { d['midi']:d for d in key_mapL }
         self.i2c_base_addr  = i2c_base_addr
-        self.prescaler_usec = 32
+        self.prescaler_usec = prescaler_usec
         
         self.serialProc.start()
         
     def close( self ):
         self.serialProc.quit()
         
+    def wait_for_serial_sync(self, timeoutMs=10000):
+
+        # wait for the letter 'a' to come back from the serial port
+        result = self.block_on_serial_read(1,timeoutMs)
+
+        if result and len(result.value)>0 and result.value[0] == ord('a'):
+            pass
+        else:
+            result.set_error("Serial sync failed.")
+
+        return result
+        
     def write( self, i2c_addr, reg_addr, byteL ):
         return self._send( 'w', i2c_addr, reg_addr, [ len(byteL) ] + byteL )
 
-    def set_read_addr( self, i2c_addr, src, addr ):
-        return self. write(i2c_addr, TinyOpD['readOp'], src, addr )
-            
-    def set_reg_read_addr( self, i2c_addr, addr ):
-        return self.set_read_addr(i2c_addr, TinyRegAddr.kRdRegAddrAddr, addr )
+    def set_read_addr( self, i2c_addr, mem_id, addr ):
+        return self. write(i2c_addr, TinyOp.setReadAddr.value,[ mem_id, addr ])
+                
+    def read_request( self, i2c_addr, reg_addr, byteOutN ):
+        return self._send( 'r', i2c_addr, reg_addr,[ byteOutN ] )
 
-    def set_table_read_addr( self, i2c_addr, addr ):
-        return self.set_read_addr(i2c_addr, TinyRegAddr.kRdTableAddrAddr, addr )
-    
-    def set_eeprom_read_addr( self, i2c_addr, addr ):
-        return self.set_read_addr(i2c_addr, TinyRegAddr.kRdEEAddrAddr, addr )
-    
-    def read_request( self, i2c_addr, reg_addr, argL ):
-        return self._send( 'r', i2c_addr, reg_addr,    [  byteOutN, len(argL) ] + argL )
-
-    def read_poll( self ):
-        return self.serialProc.recv()
-
-    def read_block( self, i2c_addr, reg_addr, argL, byteOutN, time_out_ms ):
+    def block_on_serial_read( self, byteOutN, time_out_ms=250 ):
         
-        self.read_request( self, i2c_addr, reg_addr, argL, byteOutN )
-
-        ts = datetime.datetime.now() + datetime.timeDelta(milliseconds=time_out_ms)
-
+        ts   = datetime.datetime.now() + datetime.timedelta(milliseconds=time_out_ms)
         retL = []
+        
         while datetime.datetime.now() < ts and len(retL) < byteOutN:
-            
+
+            # If a value is available at the serial port return is otherwise return None.
             x = self.serialProc.recv()
-            if x is not None:
-                retL.append(x)
+            
+            if x is not None and x[0] == SerialMsgId.DATA_MSG:
+                for b in x[1]:
+                    retL.append(int(b))
             
             time.sleep(0.01)
-        
-        return retL
+
+        result = Result(value=retL)
+            
+        if len(retL) < byteOutN:
+            result.set_error("Serial port time out on read.")
+
+        return result
+            
+            
+
+    def block_on_picadae_read( self, i2c_addr, mem_id, reg_addr, argL, byteOutN, time_out_ms ):
+
+        result = self.set_read_addr( i2c_addr, mem_id, reg_addr )
+
+        if result:
+            result = self.read_request( i2c_addr, TinyOp.setReadAddr.value, byteOutN )
+
+            if result:
+                result = self.block_on_serial_read( byteOutN, time_out_ms )
+                
+        return result
         
 
     def note_on_vel( self, midi_pitch, midi_vel ):
         return self.write( self._pitch_to_i2c_addr( midi_pitch ),
-                           TinyOpD['noteOnVelOp'],
+                           TinyOp.noteOnVelOp.value,
                            [self._validate_vel(midi_vel)] )
     
     def note_on_us( self, midi_pitch, pulse_usec ):
         return self.write( self._pitch_to_i2c_addr( midi_pitch ),
-                           TinyOpD['noteOnUsecOp'],
+                           TinyOp.noteOnUsecOp.value,
                            list(self._usec_to_coarse_and_fine(pulse_usec)) )
 
     def note_off( self, midi_pitch ):
         return self.write( self._pitch_to_i2c_addr( midi_pitch ),
-                           TinyOpD['noteOffOp'],[0] )  # TODO: sending a dummy byte because we can handle sending a command with no data bytes.
+                           TinyOp.noteOffOp.value,
+                           [0] )  # TODO: sending a dummy byte because we can't handle sending a command with no data bytes.
 
     def set_velocity_map( self, midi_pitch, midi_vel, pulse_usec ):
         pass
@@ -203,14 +239,15 @@ class Picadae:
     def get_velocity_map( self, midi_pitch, midi_vel, time_out_ms=250 ):
         pass
     
-    def set_pwm_duty( self, midi_pitch, duty_cycle_pct, enableFl=True ):
+    def set_pwm_duty( self, midi_pitch, duty_cycle_pct ):
         return self.write( self._pitch_to_i2c_addr( midi_pitch ),
-                           TinyOpD['setPwmOp'],
-                           [enableFl, int( duty_cycle_pct * 255.0 /100.0 )])
+                           TinyOp.setPwmOp.value,
+                           [ int( duty_cycle_pct * 255.0 /100.0 )])
 
     def get_pwm_duty( self, midi_pitch, time_out_ms=250 ):
-        return self.read_block( self._pitch_to_i2c_addr( midi_pitch ),
-                                TinyRegAddr.kPwmDutyAddr,
+        return self.block_on_picadae_read( self._pitch_to_i2c_addr( midi_pitch ),
+                                TinyRegAddr.kRdRegAddrAddr.value,
+                                TinyRegAddr.kPwmDutyAddr.value,
                                 [], 1, time_out_ms )
     
     def set_pwm_freq( self, midi_pitch, freq_div_id ):
@@ -219,13 +256,14 @@ class Picadae:
         pass
     
     def get_pwm_freq( self, midi_pitch, time_out_ms=250 ):
-        return self.read_block( self._pitch_to_i2c_addr( midi_pitch ),
-                                TinyRegAddr.kPwmFreqAddr,
+        return self.block_on_picadae_read( self._pitch_to_i2c_addr( midi_pitch ),
+                                TinyRegAddr.kRdRegAddrAddr.value,
+                                TinyRegAddr.kPwmFreqAddr.value,
                                 [], 1, time_out_ms )
 
     def set_flags( self, midi_pitch, flags ):
         return self.write( self._pitch_to_i2c_addr( midi_pitch ),                           
-                           TinyOpD['writeOp'],
+                           TinyOp.writeOp.value,
                            [ 12, 14, flags ])
 
     def make_note( self, midi_pitch, atk_us, dur_ms ):
@@ -245,7 +283,6 @@ class Picadae:
         coarse = int( usec / (self.prescaler_usec*255))
         fine   = int((usec - coarse*self.prescaler_usec*255) / self.prescaler_usec)
 
-        print(coarse,fine)
         assert( coarse <= 255 )
         assert( fine <= 255)
 

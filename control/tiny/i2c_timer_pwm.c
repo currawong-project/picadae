@@ -15,7 +15,7 @@
 
 
 // This program acts as the device (slave) for the control program i2c/a2a/c_ctl
-#define F_CPU 8000000L
+#define F_CPU 16000000L
 
 #include <stdio.h>
 #include <avr/io.h>
@@ -35,13 +35,15 @@
 // Opcodes
 enum
 { 
- kSetPwm_Op         =  0,  // Set PWM registers  0 {<enable> {<duty> {<freq>}}}
+ kSetPwm_Op         =  0,  // Set PWM registers  0 {<duty> {<freq>}}
  kNoteOnVel_Op      =  1,  // Turn on note       1 {<vel>}
  kNoteOnUsec_Op     =  2,  // Turn on note       2 {<coarse> {<fine> {<prescale>}}}
  kNoteOff_Op        =  3,  // Turn off note      3
- kRead_Op           =  4,  // Read a value       4 {<src>} {<addr>} }  src: 0=reg 1=table 2=eeprom
- kWrite_Op          =  5,  // Set write          5 {<addrfl|src> {addr}  {<value0> ... {<valueN>}} 
- kInvalid_Op        =  6   //                      addrFl:0x80  src: 4=reg 5=table 6=eeprom                       
+ kSetReadAddr_Op    =  4,  // Set a read addr.   4 {<src>} {<addr>} }  src: 0=reg 1=table 2=eeprom
+ kWrite_Op          =  5,  // Set write          5 {<addrfl|src> {addr}  {<value0> ... {<valueN>}}  addrFl:0x80  src: 4=reg 5=table 6=eeprom
+ kSetMode_Op        =  6,  // Set the mode flags 6 {<mode>}  1=repeat 2=pwm
+ 
+ kInvalid_Op        =  7   //                                             
 };
 
 
@@ -59,25 +61,28 @@ enum
  
  kTmr_Coarse_idx     =  8,  //  
  kTmr_Fine_idx       =  9,  // 
- kTmr_Prescale_idx   = 10,  // Timer 0 clock divider: 1=1,2=8,3=64,4=256,5=1024  Default: 8 (32us)
+ kTmr_Prescale_idx   = 10,  // Timer 0 clock divider: 1=1,2=8,3=64,4=256,5=1024  Default: 8 (16us)
  
- kPwm_Enable_idx     = 11,  // 
- kPwm_Duty_idx       = 12,  // 
- kPwm_Freq_idx       = 13,  //
+ kPwm_Duty_idx       = 11,  // 
+ kPwm_Freq_idx       = 12,  //
 
- kMode_idx          = 14, // 1=repeat 2=pwm
- kState_idx          = 15, // 1=attk 2=hold
- kError_Code_idx     = 16,  // Error Code
+ kMode_idx           = 13, // 1=repeat 2=pwm
+ kState_idx          = 14, // 1=attk 2=hold
+ kError_Code_idx     = 15, // Error Code
  kMax_idx
 };
 
 enum
 {
- kTmr_Repeat_Fl= 1,
- kTmr_Pwm_Fl   = 2,
- kAttk_Fl      = 1,
- kHold_Fl      = 2
+ kMode_Repeat_Fl = 1,
+ kMode_Pwm_Fl    = 2,
+ kAttk_Fl        = 1,
+ kHold_Fl        = 2
 };
+
+
+#define isInRepeatMode() ctl_regs[ kMode_idx ] & kMode_Repeat_Fl
+#define isInPwmMode()    ctl_regs[ kMode_idx ] & kMode_Pwm_Fl
 
 // Flags:
 // 1=Repeat: 1=Timer and PWM are free running. This allows testing with LED's. 0=Timer triggers does not reset on time out. 
@@ -93,15 +98,14 @@ volatile uint8_t ctl_regs[] =
    0,                //  5 (0-255)          Table Write Addr
    0,                //  6 (0-255)          EE Write Addr     
    kReg_Wr_Addr_idx, //  7 (0-2)    Write source
- 123,                //  8 (0-255)  Timer 0 Coarse Value 
-   8,                //  9 (0-255)  Timer 0 Fine Value
-   4,                // 10 (1-5)    4=32us per tick
-   1,                // 11 (0-1)    Pwm Enable Flag
- 127,                // 12 (0-255)  Pwm Duty cycle
- 254,                // 13 (0-255)  Pwm Frequency  (123 hz)
-   0,                // 14 mode flags  1=Repeat 2=PWM
-   0,                // 15 state flags 1=attk 2=hold
-   0,                // 16 (0-255)  Error bit field
+ 245,                //  8 (0-255)  Timer 0 Coarse Value 
+  25,                //  9 (0-255)  Timer 0 Fine Value
+   4,                // 10 (1-5)    4=16us per tick
+ 127,                // 11 (0-255)  Pwm Duty cycle
+ 254,                // 12 (0-255)  Pwm Frequency  (123 hz)
+   kMode_Repeat_Fl,  // 13 mode flags  1=Repeat 2=PWM
+   0,                // 14 state flags 1=attk   2=hold
+   0,                // 15 (0-255)  Error bit field
 };
 
 #define tableN 256
@@ -251,7 +255,7 @@ ISR(TIMER0_COMPA_vect)
       // fine mode
 
       // If in repeat mode
-      if(ctl_regs[kMode_idx] & kTmr_Repeat_Fl)
+      if(ctl_regs[kMode_idx] & kMode_Repeat_Fl)
       {
         uint8_t fl = ctl_regs[kState_idx] & kAttk_Fl;
         
@@ -271,7 +275,7 @@ ISR(TIMER0_COMPA_vect)
       {
         clear_attack();
         
-        if( ctl_regs[kMode_idx] & kTmr_Pwm_Fl)
+        if( ctl_regs[kMode_idx] & kMode_Pwm_Fl)
         {
           TIMSK  |= _BV(OCIE1B) + _BV(TOIE1);    // PWM interupt Enable interrupts          
         }
@@ -289,17 +293,13 @@ ISR(TIMER0_COMPA_vect)
 }
 
 
-void timer0_init()
+void tmr0_init()
 {
   TIMSK  &= ~_BV(OCIE0A);    // Disable interrupt TIMER1_OVF
   TCCR0A  |=  0x02;           // CTC mode
   TCCR0B  |= ctl_regs[kTmr_Prescale_idx]; // set the prescaler
 
-  GTCCR  |= _BV(PSR0);      // Set the pre-scaler to the selected value
-  
-  //tmr0_reset();              // set the timers starting state
-
-
+  GTCCR   |= _BV(PSR0);      // Set the pre-scaler to the selected value
 }
 
 
@@ -341,7 +341,7 @@ void pwm1_init()
   // set on TCNT1 == 0     // happens when TCNT1 matches OCR1C
   // clr on OCR1B == TCNT  // happens when TCNT1 matches OCR1B
   //                       // COM1B1=1 COM1B0=0 (enable output on ~OC1B)
-  TCCR1  |= 9;             // 32us period (256 divider) prescaler
+  TCCR1  |= 10;            // 32us period (512 divider) prescaler
   GTCCR  |= _BV(PWM1B);    // Enable PWM B and disconnect output pins
   GTCCR  |= _BV(PSR1);     // Set the pre-scaler to the selected value
 
@@ -485,13 +485,13 @@ void on_receive( uint8_t byteN )
   switch( op_id )
   {
     case kSetPwm_Op:
-      for(i=0; i<stack_idx; ++i)
-        ctl_regs[ kPwm_Enable_idx + i ] = stack[i];
+      for(i=0; i<stack_idx && i<2; ++i)
+        ctl_regs[ kPwm_Duty_idx + i ] = stack[i];
       pwm1_update();
       break;
       
     case kNoteOnUsec_Op:
-      for(i=0; i<stack_idx; ++i)
+      for(i=0; i<stack_idx && i<3; ++i)
         ctl_regs[ kTmr_Coarse_idx + i ] = stack[i];
       tmr0_reset();
       break;
@@ -501,8 +501,7 @@ void on_receive( uint8_t byteN )
       PORTB  &= ~_BV(HOLD_PIN);              // clear the HOLD pin          
       break;
 
-
-    case kRead_Op:
+    case kSetReadAddr_Op:
       if( stack_idx > 0 )
       {
         ctl_regs[ kRead_Src_idx ] = stack[0];
@@ -515,6 +514,15 @@ void on_receive( uint8_t byteN )
     case kWrite_Op:
       _write_op( stack, stack_idx );
       break;
+
+    case kSetMode_Op:
+      if( stack_idx > 0)
+      {
+        ctl_regs[ kMode_idx ] = stack[0];
+        tmr0_reset();
+      }
+      
+      break;
   }
 }
 
@@ -523,12 +531,10 @@ int main(void)
 {
   cli();        // mask all interupts
 
-
   DDRB  |=   _BV(ATTK_DIR)  + _BV(HOLD_DIR)  + _BV(LED_DIR);  // setup PB4,PB3,PB1 as output  
   PORTB &= ~(_BV(ATTK_PIN)  + _BV(HOLD_PIN)  + _BV(LED_PIN)); // clear output pins
-
   
-  timer0_init();
+  tmr0_init();
   pwm1_init();
   
   // setup i2c library
@@ -542,10 +548,12 @@ int main(void)
   _delay_ms(1000);  
   PINB = _BV(LED_PIN);  // writes to PINB toggle the pins
 
+  // if in repeat mode
+  if( ctl_regs[ kMode_idx ] & kMode_Repeat_Fl)
+    tmr0_reset();
   
   while(1)
   {
-    //_delay_ms(1000);
 
     if (!usi_onReceiverPtr)
     {

@@ -1,6 +1,7 @@
 import os,sys,argparse,yaml,types,select,serial,logging,time
 
 from picadae_api import Picadae
+from picadae_api import Result
 
 class PicadaeShell:
     def __init__( self, cfg ):
@@ -27,6 +28,7 @@ class PicadaeShell:
         for k,d in self.parseD.items():
             s = "{} = {}".format( k, d['help'] )
             print(s)
+        return Result()
 
     def _do_write( self, argL ):
         return self.p.write(argL[0], argL[1], argL[2:])
@@ -69,7 +71,7 @@ class PicadaeShell:
         
     def _syntaxError( self, msg ):
         print("Syntax Error: " + msg )
-        return None
+        return Result()
             
     def _exec_cmd( self, tokL ):
         if len(tokL) <= 0:
@@ -95,36 +97,48 @@ class PicadaeShell:
             if  d['varN'] != -1 and len(argL) != d['varN']:                
                 return self._syntaxError("Argument mismatch {} != {}.".format(len(argL),d['varN']))
             
-            result = func(argL) 
+            result = func(argL)
+            
 
-        return None
+        return result
     
     def run( self ):
 
         # create the API object
-        self.p = Picadae( cfg.key_mapL, cfg.i2c_base_addr, cfg.serial_dev, cfg.serial_baud )
+        self.p = Picadae( cfg.key_mapL, cfg.i2c_base_addr, cfg.serial_dev, cfg.serial_baud, cfg.prescaler_usec )
 
-        print("'q'=quit '?'=help")
-        time_out_secs = 1
-        
-        while True:
+        # wait for the letter 'a' to come back from the serial port
+        result = self.p.wait_for_serial_sync(timeoutMs=cfg.serial_sync_timeout_ms)
 
-            # wait for keyboard activity
-            i, o, e = select.select( [sys.stdin], [], [], time_out_secs )
+        if not result:
+            print("Serial port sync failed.")
+        else:
+            print(result.value)
+            
+            print("'q'=quit '?'=help")
+            time_out_secs = 1
 
-            if (i):
-                # read the command
-                s = sys.stdin.readline().strip() 
+            while True:
 
-                # tokenize the command
-                tokL = s.split(' ')
+                # wait for keyboard activity
+                i, o, e = select.select( [sys.stdin], [], [], time_out_secs )
 
-                # if this is the 'quit' command
-                if tokL[0] == 'q':
-                    break
+                if (i):
+                    # read the command
+                    s = sys.stdin.readline().strip() 
 
-                # execute the command
-                self._exec_cmd( tokL )
+                    # tokenize the command
+                    tokL = s.split(' ')
+
+                    # if this is the 'quit' command
+                    if tokL[0] == 'q':
+                        break
+
+                    # execute the command
+                    result = self._exec_cmd( tokL )
+
+                    if result.value:
+                        print(result.value)
                 
                 
         self.p.close()
