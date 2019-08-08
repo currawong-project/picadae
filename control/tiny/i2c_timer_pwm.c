@@ -42,7 +42,6 @@ enum
  kSetReadAddr_Op    =  4,  // Set a read addr.   4 {<src>} {<addr>} }  src: 0=reg 1=table 2=eeprom
  kWrite_Op          =  5,  // Set write          5 {<addrfl|src> {addr}  {<value0> ... {<valueN>}}  addrFl:0x80  src: 4=reg 5=table 6=eeprom
  kSetMode_Op        =  6,  // Set the mode flags 6 {<mode>}  1=repeat 2=pwm
- 
  kInvalid_Op        =  7   //                                             
 };
 
@@ -93,16 +92,20 @@ volatile uint8_t ctl_regs[] =
    0,                //  0 (0-(kMax_idx-1)) Reg Read Addr   
    0,                //  1 (0-255)          Table Read Addr
    0,                //  2 (0-255)          EE Read Addr  
-   kReg_Rd_Addr_idx, //  3 (0-2)    Read source   
+   kReg_Rd_Addr_idx, //  3 (0-2)    Read source
+   
    0,                //  4 (0-(kMax_idx-1)) Reg Write Addr   
    0,                //  5 (0-255)          Table Write Addr
-   0,                //  6 (0-255)          EE Write Addr     
+   0,                //  6 (0-255)          EE Write Addr
    kReg_Wr_Addr_idx, //  7 (0-2)    Write source
+   
  245,                //  8 (0-255)  Timer 0 Coarse Value 
   25,                //  9 (0-255)  Timer 0 Fine Value
    4,                // 10 (1-5)    4=16us per tick
+   
  127,                // 11 (0-255)  Pwm Duty cycle
- 254,                // 12 (0-255)  Pwm Frequency  (123 hz)
+ 254,                // 12 (0-255)  Pwm Frequency  (123 Hz)
+   
    kMode_Repeat_Fl,  // 13 mode flags  1=Repeat 2=PWM
    0,                // 14 state flags 1=attk   2=hold
    0,                // 15 (0-255)  Error bit field
@@ -295,11 +298,10 @@ ISR(TIMER0_COMPA_vect)
 
 void tmr0_init()
 {
-  TIMSK  &= ~_BV(OCIE0A);    // Disable interrupt TIMER1_OVF
-  TCCR0A  |=  0x02;           // CTC mode
+  TIMSK  &= ~_BV(OCIE0A);                 // Disable interrupt TIMER1_OVF
+  TCCR0A  |=  0x02;                       // CTC mode
   TCCR0B  |= ctl_regs[kTmr_Prescale_idx]; // set the prescaler
-
-  GTCCR   |= _BV(PSR0);      // Set the pre-scaler to the selected value
+  GTCCR   |= _BV(PSR0);                   // Set the pre-scaler to the selected value
 }
 
 

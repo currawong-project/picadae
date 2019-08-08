@@ -218,11 +218,10 @@ int main (void)
           else
           {
             // TODO: handle case where there are no data bytes (only e.g. note-off)
-            state = kWait_for_value;
-            data_buf[0] = dev_reg_addr; // make 'dev_reg_addr' the first data value to write
-            data_buf_idx = 1;           // 
-            op_byte_cnt += 1;           // incr op_byte_cnt to account for 'dev_reg_addr' as first byte
-              
+            state        = kWait_for_value;
+            data_buf[0]  = dev_reg_addr;   // make 'dev_reg_addr' the first data value to write
+            data_buf_idx = 1;              // 
+            op_byte_cnt += 1;              // incr op_byte_cnt to account for 'dev_reg_addr' as first byte              
           }
           break;
             
