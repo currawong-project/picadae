@@ -12,6 +12,8 @@ class TinyOp(Enum):
     noteOffOp    = 3
     setReadAddr  = 4
     writeOp      = 5
+    setModeOp    = 6
+    invalidOp    = 7
     
 
 class TinyRegAddr(Enum):
@@ -33,14 +35,14 @@ class TinyRegAddr(Enum):
     kErrorCodeAddr   = 15
 
 class TinyConst(Enum):
-    kRdRegSrcId    = TinyRegAddr.kRdRegAddrAddr    # 0
-    kRdTableSrcId  = TinyRegAddr.kRdTableAddrAddr  # 1
-    kRdEESrcId     = TinyRegAddr.kRdEEAddrAddr     # 2
+    kRdRegSrcId    = TinyRegAddr.kRdRegAddrAddr.value    # 0
+    kRdTableSrcId  = TinyRegAddr.kRdTableAddrAddr.value  # 1
+    kRdEESrcId     = TinyRegAddr.kRdEEAddrAddr.value     # 2
     
-    kWrRegDstId    = TinyRegAddr.kWrRegAddrAddr    # 4
-    kWrTableDstId  = TinyRegAddr.kWrTableAddrAddr  # 5
-    kWrEEDstId     = TinyRegAddr.kWrEEAddrAddr     # 6
-    kWrAddrFl      = 0x08                          # first avail bit above kWrEEAddr
+    kWrRegDstId    = TinyRegAddr.kWrRegAddrAddr.value    # 4
+    kWrTableDstId  = TinyRegAddr.kWrTableAddrAddr.value  # 5
+    kWrEEDstId     = TinyRegAddr.kWrEEAddrAddr.value     # 6
+    kWrAddrFl      = 0x08                                # first avail bit above kWrEEAddr
     
 class SerialMsgId(Enum):
     QUIT_MSG   = 0xffff   
@@ -174,6 +176,10 @@ class Picadae:
     def write( self, i2c_addr, reg_addr, byteL ):
         return self._send( 'w', i2c_addr, reg_addr, [ len(byteL) ] + byteL )
 
+    def call_op( self, midi_pitch, op_code, argL ):
+        return self.write( self._pitch_to_i2c_addr( midi_pitch ), op_code, argL )                          
+
+
     def set_read_addr( self, i2c_addr, mem_id, addr ):
         return self. write(i2c_addr, TinyOp.setReadAddr.value,[ mem_id, addr ])
                 
@@ -205,9 +211,11 @@ class Picadae:
             
             
 
-    def block_on_picadae_read( self, i2c_addr, mem_id, reg_addr, argL, byteOutN, time_out_ms ):
+    def block_on_picadae_read( self, midi_pitch, mem_id, reg_addr, byteOutN, time_out_ms ):
 
-        result = self.set_read_addr( i2c_addr, mem_id, reg_addr )
+        i2c_addr = self._pitch_to_i2c_addr( midi_pitch )
+        
+        result   = self.set_read_addr( i2c_addr, mem_id, reg_addr )
 
         if result:
             result = self.read_request( i2c_addr, TinyOp.setReadAddr.value, byteOutN )
@@ -216,39 +224,40 @@ class Picadae:
                 result = self.block_on_serial_read( byteOutN, time_out_ms )
                 
         return result
-        
+
+
+    def block_on_picadae_read_reg( self, midi_pitch, reg_addr, byteOutN=1, time_out_ms=250 ):
+        return self.block_on_picadae_read( midi_pitch,
+                                           TinyRegAddr.kRdRegAddrAddr.value,
+                                           reg_addr,
+                                           byteOutN,
+                                           time_out_ms )
 
     def note_on_vel( self, midi_pitch, midi_vel ):
-        return self.write( self._pitch_to_i2c_addr( midi_pitch ),
-                           TinyOp.noteOnVelOp.value,
-                           [self._validate_vel(midi_vel)] )
-    
+        return  self.call_op( midi_pitch, TinyOp.noteOnVelOp.value, [self._validate_vel(midi_vel)] )
+        
     def note_on_us( self, midi_pitch, pulse_usec ):
-        return self.write( self._pitch_to_i2c_addr( midi_pitch ),
-                           TinyOp.noteOnUsecOp.value,
-                           list(self._usec_to_coarse_and_fine(pulse_usec)) )
+        return  self.call_op( midi_pitch, TinyOp.noteOnUsecOp.value, list(self._usec_to_coarse_and_fine(pulse_usec)) )
 
     def note_off( self, midi_pitch ):
-        return self.write( self._pitch_to_i2c_addr( midi_pitch ),
-                           TinyOp.noteOffOp.value,
+        return self.call_op( midi_pitch, TinyOp.noteOffOp.value,
                            [0] )  # TODO: sending a dummy byte because we can't handle sending a command with no data bytes.
 
     def set_velocity_map( self, midi_pitch, midi_vel, pulse_usec ):
-        pass
+        coarse,fine = self._usec_to_coarse_and_fine( pulse_usec )
+        src         = TinyConst.kWrAddrFl.value | TinyConst.kWrTableDstId.value
+        addr        = midi_vel*2
+        return self.call_op( midi_pitch, TinyOp.writeOp.value, [ src, addr, coarse, fine ] )
     
     def get_velocity_map( self, midi_pitch, midi_vel, time_out_ms=250 ):
-        pass
+        byteOutN = 2
+        return self.block_on_picadae_read( midi_pitch, TinyConst.kRdTableSrcId.value, midi_vel*2, byteOutN, time_out_ms )        
     
     def set_pwm_duty( self, midi_pitch, duty_cycle_pct ):
-        return self.write( self._pitch_to_i2c_addr( midi_pitch ),
-                           TinyOp.setPwmOp.value,
-                           [ int( duty_cycle_pct * 255.0 /100.0 )])
+        return self.call_op( midi_pitch, TinyOp.setPwmOp.value, [ int( duty_cycle_pct * 255.0 /100.0 )])
 
     def get_pwm_duty( self, midi_pitch, time_out_ms=250 ):
-        return self.block_on_picadae_read( self._pitch_to_i2c_addr( midi_pitch ),
-                                TinyRegAddr.kRdRegAddrAddr.value,
-                                TinyRegAddr.kPwmDutyAddr.value,
-                                [], 1, time_out_ms )
+        return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kPwmDutyAddr.value, time_out_ms=time_out_ms )
     
     def set_pwm_freq( self, midi_pitch, freq_div_id ):
         # pwm frequency divider 1=1,2=8,3=64,4=256,5=1024
@@ -256,15 +265,14 @@ class Picadae:
         pass
     
     def get_pwm_freq( self, midi_pitch, time_out_ms=250 ):
-        return self.block_on_picadae_read( self._pitch_to_i2c_addr( midi_pitch ),
-                                TinyRegAddr.kRdRegAddrAddr.value,
-                                TinyRegAddr.kPwmFreqAddr.value,
-                                [], 1, time_out_ms )
+        return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kPwmFreqAddr.value, time_out_ms=time_out_ms )
 
-    def set_flags( self, midi_pitch, flags ):
-        return self.write( self._pitch_to_i2c_addr( midi_pitch ),                           
-                           TinyOp.writeOp.value,
-                           [ 12, 14, flags ])
+    def set_mode( self, midi_pitch, mode ):
+        # TODO validate mode value
+        return  self.call_op( midi_pitch, TinyOp.setModeOp.value, [ mode ] )
+        
+    def get_mode( self, midi_pitch, time_out_ms=250 ):
+        return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kModeAddr.value, time_out_ms=time_out_ms )
 
     def make_note( self, midi_pitch, atk_us, dur_ms ):
         # TODO: handle error on note_on_us()

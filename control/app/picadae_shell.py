@@ -20,7 +20,8 @@ class PicadaeShell:
             'd':{ "func":"get_pwm_duty", "varN":1,  "help":"duty <pitch>"},
             'F':{ "func":"set_pwm_freq", "varN":2,  "help":"freq <pitch> <hz>"},
             'f':{ "func":"get_pwm_freq", "varN":1,  "help":"freq <pitch>"},
-            'B':{ "func":"set_flags",    "varN":2,  "help":"flags <pitch> <flags>"},
+            'M':{ "func":"set_mode",     "varN":2,  "help":"set_mode <pitch> <mode-bits>  (1=repeat 2=pwm)" },
+            'm':{ "func":"get_mode",     "varN":1,  "help":"get_mode <pitch>"},
             'N':{ "func":"make_note",    "varN":3,  "help":"note <pitch> atkUs durMs"},
             }
 
@@ -63,9 +64,12 @@ class PicadaeShell:
     def _do_get_pwm_freq( self, argL ):
         return self.p.get_pwm_freq(*argL)
 
-    def _do_set_flags( self, argL ):
-        return self.p.set_flags(*argL)
+    def _do_set_mode( self, argL ):
+        return self.p.set_mode(*argL)
 
+    def _do_get_mode( self, argL ):
+        return self.p.get_mode(*argL)
+    
     def _do_make_note( self, argL ):
         return self.p.make_note(*argL)
         
