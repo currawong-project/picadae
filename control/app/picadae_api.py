@@ -12,7 +12,7 @@ class TinyOp(Enum):
     noteOffOp    = 3
     setReadAddr  = 4
     writeOp      = 5
-    setModeOp    = 6
+    writeTableOp = 6
     invalidOp    = 7
     
 
@@ -30,7 +30,7 @@ class TinyRegAddr(Enum):
     kTmrPrescaleAddr = 10 
     kPwmDutyAddr     = 11
     kPwmFreqAddr     = 12
-    kModeAddr        = 13
+    kPwmDivAddr      = 13
     kStateAddr       = 14
     kErrorCodeAddr   = 15
 
@@ -155,9 +155,10 @@ class Picadae:
         self.keyMapD        = { d['midi']:d for d in key_mapL }
         self.i2c_base_addr  = i2c_base_addr
         self.prescaler_usec = prescaler_usec
+        self.log_level      = 0
         
         self.serialProc.start()
-        
+
     def close( self ):
         self.serialProc.quit()
         
@@ -178,7 +179,6 @@ class Picadae:
 
     def call_op( self, midi_pitch, op_code, argL ):
         return self.write( self._pitch_to_i2c_addr( midi_pitch ), op_code, argL )                          
-
 
     def set_read_addr( self, i2c_addr, mem_id, addr ):
         return self. write(i2c_addr, TinyOp.setReadAddr.value,[ mem_id, addr ])
@@ -211,7 +211,7 @@ class Picadae:
             
             
 
-    def block_on_picadae_read( self, midi_pitch, mem_id, reg_addr, byteOutN, time_out_ms ):
+    def block_on_picadae_read( self, midi_pitch, mem_id, reg_addr, byteOutN, time_out_ms=250 ):
 
         i2c_addr = self._pitch_to_i2c_addr( midi_pitch )
         
@@ -251,34 +251,33 @@ class Picadae:
     
     def get_velocity_map( self, midi_pitch, midi_vel, time_out_ms=250 ):
         byteOutN = 2
-        return self.block_on_picadae_read( midi_pitch, TinyConst.kRdTableSrcId.value, midi_vel*2, byteOutN, time_out_ms )        
-    
-    def set_pwm_duty( self, midi_pitch, duty_cycle_pct ):
+        return self.block_on_picadae_read( midi_pitch, TinyConst.kRdTableSrcId.value, midi_vel*2, byteOutN, time_out_ms )
+
+    def set_pwm( self, midi_pitch, duty_cycle_pct ):
         return self.call_op( midi_pitch, TinyOp.setPwmOp.value, [ int( duty_cycle_pct * 255.0 /100.0 )])
 
-    def get_pwm_duty( self, midi_pitch, time_out_ms=250 ):
+    def get_pwm( self, midi_pitch, time_out_ms=250 ):
         return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kPwmDutyAddr.value, time_out_ms=time_out_ms )
-    
-    def set_pwm_freq( self, midi_pitch, freq_div_id ):
-        # pwm frequency divider 1=1,2=8,3=64,4=256,5=1024
-        assert( 1 <= freq_div_id and freq_div_id <= 5 )
-        pass
     
     def get_pwm_freq( self, midi_pitch, time_out_ms=250 ):
         return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kPwmFreqAddr.value, time_out_ms=time_out_ms )
 
-    def set_mode( self, midi_pitch, mode ):
-        # TODO validate mode value
-        return  self.call_op( midi_pitch, TinyOp.setModeOp.value, [ mode ] )
-        
-    def get_mode( self, midi_pitch, time_out_ms=250 ):
-        return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kModeAddr.value, time_out_ms=time_out_ms )
+    def get_pwm_div( self, midi_pitch, time_out_ms=250 ):
+        return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kPwmDivAddr.value, time_out_ms=time_out_ms )
+
+    def write_table( self, midi_pitch, time_out_ms=250 ):
+        # TODO: sending a dummy byte because we can't handle sending a command with no data bytes.
+        return self.call_op( midi_pitch, TinyOp.writeTableOp.value,[0])
 
     def make_note( self, midi_pitch, atk_us, dur_ms ):
         # TODO: handle error on note_on_us()
         self.note_on_us(midi_pitch, atk_us);
         time.sleep( dur_ms / 1000.0 )
         return self.note_off(midi_pitch)
+
+    def set_log_level( self, log_level ):
+        self.log_level = log_level
+        return Result()
         
     def _pitch_to_i2c_addr( self, pitch ):
         return self.keyMapD[ pitch ]['index'] + self.i2c_base_addr
@@ -305,11 +304,12 @@ class Picadae:
         return self.serialProc.send(SerialMsgId.DATA_MSG, byteA )
 
     def _print( self, opcode, i2c_addr, reg_addr, byteL ):
-        
-        s = "{} {} {}".format( opcode, i2c_addr, reg_addr )
 
-        for x in byteL:
-            s += " {}".format(x)
+        if self.log_level:
+            s = "{} {} {}".format( opcode, i2c_addr, reg_addr )
+
+            for x in byteL:
+                s += " {}".format(x)
 
 
-        print(s)
+            print(s)

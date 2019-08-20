@@ -7,77 +7,44 @@ class PicadaeShell:
     def __init__( self, cfg ):
         self.p      = None
         self.parseD = {
-            'q':{ "func":None,           "varN":0,  "help":"quit"},
-            '?':{ "func":"help",         "varN":0,  "help":"Print usage text."},
-            'w':{ "func":"write",        "varN":-1, "help":"write <i2c_addr> <reg_addr> <data0> ... <dataN>"},
-            'r':{ "func":"read",         "varN":3,  "help":"read  <i2c_addr> <reg_addr> <byteN>"},
-            'v':{ "func":"note_on_vel",  "varN":2,  "help":"note-on <pitch> <vel>"},
-            'u':{ "func":"note_on_us",   "varN":2,  "help":"note-on <pitch> <usec>"},
-            'o':{ "func":"note_off",     "varN":1,  "help":"note-off <pitch>"},
-            'T':{ "func":"set_vel_map",  "varN":3,  "help":"table <pitch> <vel> <usec>"},
-            't':{ "func":"get_vel_map",  "varN":2,  "help":"table <pitch> <vel>"},
-            'D':{ "func":"set_pwm_duty", "varN":2,  "help":"duty <pitch> <percent>"},
-            'd':{ "func":"get_pwm_duty", "varN":1,  "help":"duty <pitch>"},
-            'F':{ "func":"set_pwm_freq", "varN":2,  "help":"freq <pitch> <hz>"},
-            'f':{ "func":"get_pwm_freq", "varN":1,  "help":"freq <pitch>"},
-            'M':{ "func":"set_mode",     "varN":2,  "help":"set_mode <pitch> <mode-bits>  (1=repeat 2=pwm)" },
-            'm':{ "func":"get_mode",     "varN":1,  "help":"get_mode <pitch>"},
-            'N':{ "func":"make_note",    "varN":3,  "help":"note <pitch> atkUs durMs"},
+            'q':{ "func":None,           "minN":0,  "maxN":0, "help":"quit"},
+            '?':{ "func":"_help",        "minN":0,  "maxN":0, "help":"Print usage text."},
+            'w':{ "func":"_write",       "minN":-1, "maxN":-1,"help":"write <i2c_addr> <reg_addr> <data0> ... <dataN>"},
+            'r':{ "func":"_read",        "minN":4,  "maxN":4, "help":"read  <i2c_addr> <src> <reg_addr> <byteN>"},
+            'v':{ "func":"note_on_vel",  "minN":2,  "maxN":2, "help":"note-on <pitch> <vel>"},
+            'u':{ "func":"note_on_us",   "minN":2,  "maxN":3, "help":"note-on <pitch> <usec> <prescale> (1=1, 2=8, 3=64,(4)=256 16us, 5=1024)"},
+            'o':{ "func":"note_off",     "minN":1,  "maxN":1, "help":"note-off <pitch>"},
+            'T':{ "func":"set_vel_map",  "minN":3,  "maxN":3, "help":"table <pitch> <vel> <usec>"},
+            't':{ "func":"get_vel_map",  "minN":2,  "maxN":2, "help":"table <pitch> <vel>"},
+            'D':{ "func":"set_pwm",      "minN":2,  "maxN":4, "help":"duty <pitch> <percent> {<hz> {<div>}} div:2=2,3=4,4=8,5=16,6=32,7=64,8=128,9=256,(10)=512 32us, 11=1024,12=2048,13=4096,14=8192,15=16384" },
+            'd':{ "func":"get_pwm_duty", "minN":1,  "maxN":1, "help":"duty <pitch>"},
+            'f':{ "func":"get_pwm_freq", "minN":1,  "maxN":1, "help":"freq <pitch>"},
+            'i':{ "func":"get_pwm_div",  "minN":1,  "maxN":1, "help":"div <pitch>"},
+            'W':{ "func":"write_table",  "minN":1,  "maxN":1, "help":"write_table <pitch>"},
+            'N':{ "func":"make_note",    "minN":3,  "maxN":3, "help":"note <pitch> atkUs durMs"},
+            'L':{ "func":"set_log_level","minN":1,  "maxN":1, "help":"log <level> (0-1)."}
             }
 
-    def _do_help( self, _ ):
+    def _help( self, _=None ):
         for k,d in self.parseD.items():
             s = "{} = {}".format( k, d['help'] )
             print(s)
         return Result()
 
-    def _do_write( self, argL ):
+    def _write( self, argL ):
         return self.p.write(argL[0], argL[1], argL[2:])
     
-    def _do_read( self, argL ):
-        return self.p.read(*argL)
-
-    def _do_note_on_vel( self, argL ):
-        return self.p.note_on_vel(*argL)
-    
-    def _do_note_on_us( self, argL ):
-        return self.p.note_on_us(*argL)
-
-    def _do_note_off( self, argL ):
-        return self.p.note_off(*argL)
-
-    def _do_set_vel_map( self, argL ):
-        return self.p.set_velocity_map(*argL)
-
-    def _do_get_vel_map( self, argL ):
-        return self.p.get_velocity_map(*argL)
-
-    def _do_set_pwm_duty( self, argL ):
-        return self.p.set_pwm_duty(*argL)
-
-    def _do_get_pwm_duty( self, argL ):
-        return self.p.get_pwm_duty(*argL)
-    
-    def _do_set_pwm_freq( self, argL ):
-        return self.p.set_pwm_freq(*argL)
-
-    def _do_get_pwm_freq( self, argL ):
-        return self.p.get_pwm_freq(*argL)
-
-    def _do_set_mode( self, argL ):
-        return self.p.set_mode(*argL)
-
-    def _do_get_mode( self, argL ):
-        return self.p.get_mode(*argL)
-    
-    def _do_make_note( self, argL ):
-        return self.p.make_note(*argL)
+    def _read( self, argL ):
+        return self.p.block_on_picadae_read(argL[0], argL[1], argL[2], argL[3])
         
     def _syntaxError( self, msg ):
         print("Syntax Error: " + msg )
         return Result()
             
     def _exec_cmd( self, tokL ):
+
+        result = Result()
+        
         if len(tokL) <= 0:
             return None
 
@@ -88,21 +55,29 @@ class PicadaeShell:
 
         d = self.parseD[ opcode ]
 
-        func_name = "_do_" + d['func']
+        func_name = d['func']
+        func      = None
 
+        # find the function associated with this command
         if hasattr(self, func_name ):
-            func   = getattr(self, func_name )
+            func = getattr(self, func_name )
+        elif hasattr(self.p, func_name ):
+            func = getattr(self.p, func_name )
+        else:
+           return self._syntaxError("Exec function not found: '{}'.".format(func_name))
 
-            try:
-                argL = [ int(tokL[i]) for i in range(1,len(tokL)) ]
-            except:
-                return self._syntaxError("Unable to create integer arguments.")
+        try:
+            # convert the parameter list into integers
+            argL = [ int(tokL[i]) for i in range(1,len(tokL)) ]
+        except:
+            return self._syntaxError("Unable to create integer arguments.")
 
-            if  d['varN'] != -1 and len(argL) != d['varN']:                
-                return self._syntaxError("Argument mismatch {} != {}.".format(len(argL),d['varN']))
-            
-            result = func(argL)
-            
+        # validate the count of command args
+        if  d['minN'] != -1 and (d['minN'] > len(argL) or len(argL) > d['maxN']):                
+            return self._syntaxError("Argument count mismatch. {} is out of range:{} to {}".format(len(argL),d['minN'],d['maxN']))
+
+        # call the command function
+        result = func(*argL)
 
         return result
     
