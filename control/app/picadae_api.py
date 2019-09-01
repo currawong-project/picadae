@@ -275,6 +275,12 @@ class Picadae:
         time.sleep( dur_ms / 1000.0 )
         return self.note_off(midi_pitch)
 
+    def make_seq( self, midi_pitch, base_atk_us, dur_ms, delta_us, note_cnt ):
+        for i in range(note_cnt):
+            self.make_note( midi_pitch, base_atk_us + i*delta_us, dur_ms )
+            time.sleep( dur_ms / 1000.0 )
+        return Result()
+
     def set_log_level( self, log_level ):
         self.log_level = log_level
         return Result()
@@ -286,12 +292,16 @@ class Picadae:
         return vel
 
     def _usec_to_coarse_and_fine( self, usec ):
+
+        coarse_usec = self.prescaler_usec*255 # usec's in one coarse tick
         
-        coarse = int( usec / (self.prescaler_usec*255))
-        fine   = int((usec - coarse*self.prescaler_usec*255) / self.prescaler_usec)
+        coarse = int( usec / coarse_usec )
+        fine   = int((usec - coarse*coarse_usec) / self.prescaler_usec)
 
         assert( coarse <= 255 )
         assert( fine <= 255)
+
+        print("C:%i F:%i : %i " % (coarse,fine, coarse*coarse_usec + fine*self.prescaler_usec ))
 
         return coarse,fine
 

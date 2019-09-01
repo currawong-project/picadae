@@ -21,7 +21,8 @@ class PicadaeShell:
             'f':{ "func":"get_pwm_freq", "minN":1,  "maxN":1, "help":"freq <pitch>"},
             'i':{ "func":"get_pwm_div",  "minN":1,  "maxN":1, "help":"div <pitch>"},
             'W':{ "func":"write_table",  "minN":1,  "maxN":1, "help":"write_table <pitch>"},
-            'N':{ "func":"make_note",    "minN":3,  "maxN":3, "help":"note <pitch> atkUs durMs"},
+            'N':{ "func":"make_note",    "minN":3,  "maxN":3, "help":"note <pitch> <atkUs> <durMs>"},
+            'S':{ "func":"make_seq",     "minN":5,  "maxN":5, "help":"seq  <pitch> <atkUs> <durMs> <deltaUs> <note_count>"}, 
             'L':{ "func":"set_log_level","minN":1,  "maxN":1, "help":"log <level> (0-1)."}
             }
 
