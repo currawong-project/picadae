@@ -221,6 +221,7 @@ void tmr0_reset()
     OCR0A     = ctl_regs[kTmr_Fine_idx];
   }
   
+  TCNT0  = 0;
   TIMSK |= _BV(OCIE0A);     // enable the timer interrupt
 }
 
@@ -247,7 +248,8 @@ ISR(TIMER0_COMPA_vect)
       // This marks the end of a timer period 
 
       clear_attack();
-        
+
+      TCNT1   = 0;
       TIMSK  |= _BV(OCIE1B) + _BV(TOIE1);  // PWM interupt Enable interrupts          
       TIMSK &= ~_BV(OCIE0A);               // clear timer interrupt
       
@@ -282,15 +284,17 @@ void pwm1_update()
 }
 
 
-
+// Called when TCNT1 == OCR1C.
+// At this point TCNT1 is reset to 0, new OCR1B values are latched from temp. loctaion to OCR1B
 ISR(TIMER1_OVF_vect)
 {
-  PORTB |= _BV(HOLD_PIN);  // set PWM pin
+  PORTB &= ~(_BV(HOLD_PIN)); // clear PWM pin
 }
 
+// Called when TCN1 == OCR1B
 ISR(TIMER1_COMPB_vect)
 {
-  PORTB &= ~(_BV(HOLD_PIN)); // clear PWM pin
+  PORTB |= _BV(HOLD_PIN);  // set PWM pin
 }
 
 
@@ -298,11 +302,8 @@ void pwm1_init()
 {
   TIMSK  &= ~(_BV(OCIE1B) + _BV(TOIE1));    // Disable interrupts
   
-  DDRB   |=  _BV(HOLD_DIR);  // setup PB3 as output  
+  DDRB   |=  _BV(HOLD_DIR);  // setup PB3 as output
 
-  // set on TCNT1 == 0     // happens when TCNT1 matches OCR1C
-  // clr on OCR1B == TCNT  // happens when TCNT1 matches OCR1B
-  //                       // COM1B1=1 COM1B0=0 (enable output on ~OC1B)
   TCCR1  |= ctl_regs[ kPwm_Div_idx];    // 32us period (512 divider) prescaler
   GTCCR  |= _BV(PWM1B);    // Enable PWM B and disconnect output pins
   GTCCR  |= _BV(PSR1);     // Set the pre-scaler to the selected value
@@ -452,7 +453,9 @@ void on_receive( uint8_t byteN )
 
       // if the PWM prescaler was changed
       if( i == 3 )
+        cli();
         pwm1_init();
+        sei();
           
       pwm1_update();
       break;
@@ -470,7 +473,9 @@ void on_receive( uint8_t byteN )
       }   
       // if a prescaler was included then the timer needs to be re-initialized
       if( i == 3 )
+        cli();
         tmr0_init();
+        sei();
       
       tmr0_reset();
       break;
