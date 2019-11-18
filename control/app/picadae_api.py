@@ -174,14 +174,14 @@ class Picadae:
 
         return result
         
-    def write( self, i2c_addr, reg_addr, byteL ):
+    def write_tiny_reg( self, i2c_addr, reg_addr, byteL ):
         return self._send( 'w', i2c_addr, reg_addr, [ len(byteL) ] + byteL )
 
     def call_op( self, midi_pitch, op_code, argL ):
-        return self.write( self._pitch_to_i2c_addr( midi_pitch ), op_code, argL )                          
+        return self.write_tiny_reg( self._pitch_to_i2c_addr( midi_pitch ), op_code, argL )                          
 
     def set_read_addr( self, i2c_addr, mem_id, addr ):
-        return self. write(i2c_addr, TinyOp.setReadAddr.value,[ mem_id, addr ])
+        return self.write_tiny_reg(i2c_addr, TinyOp.setReadAddr.value,[ mem_id, addr ])
                 
     def read_request( self, i2c_addr, reg_addr, byteOutN ):
         return self._send( 'r', i2c_addr, reg_addr,[ byteOutN ] )
@@ -253,11 +253,22 @@ class Picadae:
         byteOutN = 2
         return self.block_on_picadae_read( midi_pitch, TinyConst.kRdTableSrcId.value, midi_vel*2, byteOutN, time_out_ms )
 
-    def set_pwm( self, midi_pitch, duty_cycle_pct ):
-        return self.call_op( midi_pitch, TinyOp.setPwmOp.value, [ int( duty_cycle_pct * 255.0 /100.0 )])
+    def set_pwm_duty( self, midi_pitch, duty_cycle_pct ):
+        if 0 <= duty_cycle_pct and duty_cycle_pct <= 100:
+            duty_cycle_pct = 100.0 - duty_cycle_pct
+            return self.call_op( midi_pitch, TinyOp.setPwmOp.value, [ int( duty_cycle_pct * 255.0 /100.0 )])
+        else:
+            return Result(msg="Duty cycle (%f) out of range 0-100." % (duty_cycle_pct))
 
-    def get_pwm( self, midi_pitch, time_out_ms=250 ):
+    def get_pwm_duty( self, midi_pitch, time_out_ms=250 ):
         return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kPwmDutyAddr.value, time_out_ms=time_out_ms )
+    
+    def set_pwm_freq( self, midi_pitch, freq ):
+        res = self.get_pwm_duty( midi_pitch )
+        if res:
+            print("duty",int(res.value[0]))
+            res = self.call_op( midi_pitch, TinyOp.setPwmOp.value, [ int(res.value[0]), int(freq) ])
+        return res
     
     def get_pwm_freq( self, midi_pitch, time_out_ms=250 ):
         return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kPwmFreqAddr.value, time_out_ms=time_out_ms )
@@ -296,12 +307,14 @@ class Picadae:
         coarse_usec = self.prescaler_usec*255 # usec's in one coarse tick
         
         coarse = int( usec / coarse_usec )
-        fine   = int((usec - coarse*coarse_usec) / self.prescaler_usec)
+        fine   = int(round((usec - coarse*coarse_usec) / self.prescaler_usec))
 
         assert( coarse <= 255 )
         assert( fine <= 255)
 
-        print("C:%i F:%i : %i " % (coarse,fine, coarse*coarse_usec + fine*self.prescaler_usec ))
+        x = coarse*coarse_usec + fine*self.prescaler_usec
+        
+        print("C:%i F:%i : %i %i (%i)" % (coarse,fine, x, usec, usec-x ))
 
         return coarse,fine
 
