@@ -10,6 +10,16 @@
 
 #include "twi.h"
 
+#define ICP_PRE_SCALE (4)
+#if defined(__AVR_ATmega2560__)
+#define SERIAL_RX_ISR USART0_RX_vect
+#elif defined(__AVR_ATmega328__)
+#define SERIAL_RX_ISR USART_RX_vect
+#else
+#error Unknown target processor
+#endif
+
+
 //------------------------------------------------------------------------------
 
 #define SER_BUF_N (16)  // size of receive buffer
@@ -102,7 +112,7 @@ void i2c_init()
   twi_init();
 }
 
-ISR(USART_RX_vect)
+ISR(SERIAL_RX_ISR)
 {
   // receive the incoming byte
   ser_buf[ ser_buf_i_idx ] = uart_getchar();
@@ -112,25 +122,6 @@ ISR(USART_RX_vect)
 }
 
 
-//--------------------------------------------------------------------------------------------------
-static volatile int timerFl = 0;
-  
-
-ISR(TIMER1_COMPA_vect)
-{
-  timerFl = 1;
-}
-
-void timer_init(void)
-{
-  TCCR1A = 0;              // set timer control registers to default
-  TCCR1B = 0;              // 
-  OCR1A = 15624;           // 1 Hz = 16Mghz / (1024 * 15624)
-  TCCR1B |= (1 << WGM12);  // CTC mode on
-  TCCR1B |= (1 << CS10);   // Set CS10 and CS12 bits for 1024 prescaler:
-  TCCR1B |= (1 << CS12);   // 
-  TIMSK1 |= (1 << OCIE1A); // enable timer compare interrupt  
-}
 
 //--------------------------------------------------------------------------------------------------
 
@@ -156,7 +147,6 @@ int main (void)
 
   DDRB |= _BV(DDB5);  // set led pin for output
   
-  timer_init(); // setup the timer
   uart_init();  // setup UART data format and baud rate
   i2c_init();
   sei();        // re-enable interrupts
@@ -165,12 +155,6 @@ int main (void)
   
   for(;;)
   {
-    if( timerFl )
-    {
-      //PORTB ^= _BV(PORTB5);   //  toggle LED
-      
-      timerFl = 0;
-    }
     
     // if there are bytes waiting in the serial buffer
     if( ser_buf_o_idx != ser_buf_i_idx )
