@@ -6,8 +6,8 @@
                                     AT TINY 85
                                      +--\/--+
                               RESET _| 1  8 |_ +5V
-             ~OC1B       HOLD  DDB3 _| 2  7 |_ SCL         yellow 
-              OC1B      ONSET  DDB4 _| 3  6 |_ DDB1 LED
+             ~OC1B       HOLD PINB3 _| 2  7 |_ SCL         yellow 
+              OC1B      ONSET PINB4 _| 3  6 |_ PINB1 LED
                                 GND _| 4  5 |_ SDA         orange
                                      +------+
         * = Serial and/or programming pins on Arduino as ISP
@@ -201,13 +201,18 @@ volatile uint8_t tmr0_coarse_cur   = 0;
 #define set_attack()    do { ctl_regs[kState_idx] |= kState_Attk_Fl;  PORTB |= _BV(ATTK_PIN);            } while(0)
 #define clear_attack()  do { PORTB &= ~_BV(ATTK_PIN);           ctl_regs[kState_idx] &= ~kState_Attk_Fl; } while(0)
 
+volatile uint8_t hold_state = 0;  // state=0 hold should not be set, state=1 hold can be set
+#define clear_hold() PORTB &= ~(_BV(HOLD_PIN))
+#define set_hold()   PORTB |= _BV(HOLD_PIN)
 
 // Use the current tmr0 ctl_reg[] values to set the timer to the starting state.
 void tmr0_reset()
 {
   tmr0_coarse_cur       = 0;               // clear the coarse time counter
   ctl_regs[kState_idx] |= kState_Attk_Fl;  // set the attack state
-  PORTB                |= _BV(ATTK_PIN);   // set the attack pin 
+  PORTB                |= _BV(ATTK_PIN);   // set the attack pin
+  clear_hold();                            // clear the hold pin
+  hold_state = 0;
   
   // if a coarse count exists then go into coarse mode 
   if( ctl_regs[kTmr_Coarse_idx] > 0 )
@@ -249,7 +254,8 @@ ISR(TIMER0_COMPA_vect)
 
       clear_attack();
 
-      TCNT1   = 0;
+      TCNT1      = 0;   // reset the PWM counter to 0
+      hold_state = 1;   // enable the hold output
       TIMSK  |= _BV(OCIE1B) + _BV(TOIE1);  // PWM interupt Enable interrupts          
       TIMSK &= ~_BV(OCIE0A);               // clear timer interrupt
       
@@ -288,13 +294,14 @@ void pwm1_update()
 // At this point TCNT1 is reset to 0, new OCR1B values are latched from temp. loctaion to OCR1B
 ISR(TIMER1_OVF_vect)
 {
-  PORTB &= ~(_BV(HOLD_PIN)); // clear PWM pin
+  clear_hold();
 }
 
-// Called when TCN1 == OCR1B
+// Called when TCNT1 == OCR1B
 ISR(TIMER1_COMPB_vect)
 {
-  PORTB |= _BV(HOLD_PIN);  // set PWM pin
+  if(hold_state)
+    set_hold();
 }
 
 
@@ -309,6 +316,7 @@ void pwm1_init()
   GTCCR  |= _BV(PSR1);     // Set the pre-scaler to the selected value
 
   pwm1_update();
+
 }
 
 //------------------------------------------------------------------------------
@@ -453,10 +461,12 @@ void on_receive( uint8_t byteN )
 
       // if the PWM prescaler was changed
       if( i == 3 )
+      {
         cli();
         pwm1_init();
         sei();
-          
+      }
+      
       pwm1_update();
       break;
 
@@ -473,17 +483,19 @@ void on_receive( uint8_t byteN )
       }   
       // if a prescaler was included then the timer needs to be re-initialized
       if( i == 3 )
+      {
         cli();
         tmr0_init();
         sei();
+      }
       
       tmr0_reset();
       break;
 
     case kNoteOff_Op:
       TIMSK  &= ~_BV(OCIE0A);                // clear timer interrupt (shouldn't be necessary)
-      TIMSK  &= ~(_BV(OCIE1B) + _BV(TOIE1)); // PWM interupt disable interrupts          
-      PORTB  &= ~_BV(HOLD_PIN);              // clear the HOLD pin
+      //TIMSK  &= ~(_BV(OCIE1B) + _BV(TOIE1)); // PWM interupt disable interrupts
+      hold_state = 0;
       break;
 
     case kSetReadAddr_Op:
