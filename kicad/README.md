@@ -1,18 +1,18 @@
 # Bill of materials
 
 ## Power and Control 
-Id   | Type            | Description         | Qty | Source   | Part Number
------|-----------------|---------------------|-----|----------|--------------------
-J3   | 6P Terminal     | Screw Terminal      |   2 | Mouser   | 651-1725698
-P1   | HDS800PS24      | 24V Power Supply    |   1 | Digikey  | 1470-2689-ND
-P2   | HDS800PS12      | 12V Power Supply    |   1 | Digikey  | 1470-2687-ND
-P3   | TXL 015-05S     | 5V Power Supply     |   1 | Digikey  | 1951-1325-ND
-M0   | Controller MCU  | Arduino Uno R3      |   1 | Digikey  | 1050-1024-ND
-     | 1/16 x 1/8 x 1/2| Rubber feet (pkg 100|   1 | McMaster | 9753K11
+Id   | Type            | Description          | Qty | Source   | Part Number
+-----|-----------------|----------------------|-----|----------|--------------------
+J3   | 6P Terminal     | Screw Terminal       |   2 | Mouser   | 651-1725698
+P1   | HDS800PS24      | 24V Power Supply     |   1 | Digikey  | 1470-2689-ND
+P2   | HDS800PS12      | 12V Power Supply     |   1 | Digikey  | 1470-2687-ND
+P3   | TXL 015-05S     | 5V Power Supply      |   1 | Digikey  | 1951-1325-ND
+M0   | Controller MCU  | Arduino Uno R3       |   1 | Digikey  | 1050-1024-ND
+     | 1/16 x 1/8 x 1/2| Rubber feet(pkg 100) |   1 | McMaster | 9753K11
 
 ## Key Driver Board (11 channels per board) 
-Id     Type              Description           Qty   Source     Part Number
------|-----------------|----------------------|----|----------|--------------------
+Id   | Type            | Description         | Qty | Source   | Part Number
+-----|-----------------|---------------------|-----|----------|--------------------
 U1   | ATtiny85-20MU   | Microcontroller     |  11 | Mouser   | 556-ATTINY85-20PU
      | 8DIP IC         | Socket              |  11 | Mouser   | 571-1-2199298-2
      | 0.1uF           | Capacitor           |   1 | Digikey  | 399-14010-1-ND
@@ -29,8 +29,8 @@ J1   | 2P Terminal     | Screw Terminal      |  11 | Mouser   | 651-1725656
 J2   | 6P Female .1    | Pin Terminal        |   1 | Digikey  | H123900-ND
 
 ## Damper Pedal Driver Board
-Id     Type              Description           Qty   Source     Part Number
------|-----------------|----------------------|----|----------|--------------------
+Id   | Type            | Description         | Qty | Source   | Part Number
+-----|-----------------|---------------------|-----|----------|--------------------
 R1-4 | 180 ohm         | Resistor            |   4 |  Mouser  | 660-MF1/2LCT52R181G
 R5-6 | 470 ohm         | Resistor            |   2 |  Mouser  | 71-CCF07470RGKE36
 C1-2 | 1uF             | Capacitor           |   2 |  Newark  | 65R3171
