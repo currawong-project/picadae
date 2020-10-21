@@ -39,7 +39,7 @@ J2   | 6P Female .1    | Pin Terminal        |   1 | Digikey  | H123900-ND
 
 ## Damper Pedal Driver Board
 
-![Pedal driver assembly](keyboard.png)
+![Pedal driver assembly](pedal.png)
 
 
 Id   | Type            | Description         | Qty | Source   | Part Number
