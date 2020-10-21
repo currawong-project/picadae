@@ -1,0 +1,673 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title "Tutorial 1"
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L pedalDriver3-rescue:R-pedalDriver3-rescue R?
+U 1 1 5AAE4DFD
+P 2300 3200
+F 0 "R?" V 2380 3200 50  0000 C CNN
+F 1 "180Ω" V 2300 3200 50  0000 C CNN
+F 2 "" V 2230 3200 50  0001 C CNN
+F 3 "" H 2300 3200 50  0001 C CNN
+	1    2300 3200
+	0    1    1    0   
+$EndComp
+$Comp
+L pedalDriver3-rescue:R-pedalDriver3-rescue R?
+U 1 1 5AAE5136
+P 3650 2825
+F 0 "R?" V 3730 2825 50  0000 C CNN
+F 1 "180Ω" V 3650 2825 50  0000 C CNN
+F 2 "Resistors_THT:R_Axial_DIN0309_L9.0mm_D3.2mm_P12.70mm_Horizontal" V 3580 2825 50  0001 C CNN
+F 3 "" H 3650 2825 50  0001 C CNN
+	1    3650 2825
+	-1   0    0    1   
+$EndComp
+$Comp
+L pedalDriver3-rescue:BS170-pedalDriver3-rescue Q?
+U 1 1 5AAE54D0
+P 4000 3150
+F 0 "Q?" H 3800 3275 50  0000 L CNN
+F 1 "BS170" H 3750 2950 50  0000 L CNN
+F 2 "TO_SOT_Packages_THT:TO-92_Molded_Narrow" H 4200 3075 50  0001 L CIN
+F 3 "" H 4000 3150 50  0001 L CNN
+	1    4000 3150
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:R-pedalDriver3-rescue R?
+U 1 1 5AAE5AE8
+P 4100 2650
+F 0 "R?" V 4180 2650 50  0000 C CNN
+F 1 "470Ω" V 4100 2650 50  0000 C CNN
+F 2 "Resistors_THT:R_Axial_DIN0309_L9.0mm_D3.2mm_P12.70mm_Horizontal" V 4030 2650 50  0001 C CNN
+F 3 "" H 4100 2650 50  0001 C CNN
+	1    4100 2650
+	-1   0    0    1   
+$EndComp
+$Comp
+L pedalDriver3-rescue:IRF540N-pedalDriver3-rescue Q?
+U 1 1 5AAE5DD7
+P 5225 2825
+F 0 "Q?" H 5475 2900 50  0000 L CNN
+F 1 "IRF1310NPBF" H 5475 2825 50  0000 L CNN
+F 2 "TO_SOT_Packages_THT:TO-220_Vertical" H 5475 2750 50  0001 L CIN
+F 3 "" H 5225 2825 50  0001 L CNN
+	1    5225 2825
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:D_ALT-pedalDriver3-rescue D?
+U 1 1 5AAE65E8
+P 5325 2375
+F 0 "D?" H 5325 2475 50  0000 C CNN
+F 1 "STTH30R061PI" V 5200 2075 50  0000 C CNN
+F 2 "TO_SOT_Packages_THT:TO-220-2_Vertical" H 5325 2375 50  0001 C CNN
+F 3 "" H 5325 2375 50  0001 C CNN
+	1    5325 2375
+	0    -1   -1   0   
+$EndComp
+$Comp
+L pedalDriver3-rescue:LM7810ACT-pedalDriver3-rescue U?
+U 1 1 5AAE690E
+P 4725 1550
+F 0 "U?" H 4525 1750 50  0000 C CNN
+F 1 "LM7810ACT" H 4725 1750 50  0000 L CNN
+F 2 "TO_SOT_Packages_THT:TO-220_Vertical" H 4725 1650 50  0001 C CIN
+F 3 "" H 4725 1550 50  0001 C CNN
+	1    4725 1550
+	-1   0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:D_ALT-pedalDriver3-rescue D?
+U 1 1 5AAE6FC6
+P 5325 1775
+F 0 "D?" H 5325 1675 50  0000 C CNN
+F 1 "STTH30R061PI" V 5475 1475 50  0000 C CNN
+F 2 "TO_SOT_Packages_THT:TO-220-2_Vertical" H 5325 1775 50  0001 C CNN
+F 3 "" H 5325 1775 50  0001 C CNN
+	1    5325 1775
+	0    1    1    0   
+$EndComp
+$Comp
+L pedalDriver3-rescue:C-pedalDriver3-rescue C?
+U 1 1 5AAE751F
+P 4325 2075
+F 0 "C?" H 4350 2175 50  0000 L CNN
+F 1 "1µF" H 4350 1975 50  0000 L CNN
+F 2 "" H 4363 1925 50  0001 C CNN
+F 3 "" H 4325 2075 50  0001 C CNN
+	1    4325 2075
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:R-pedalDriver3-rescue R?
+U 1 1 5AAE81BF
+P 2175 5150
+F 0 "R?" V 2255 5150 50  0000 C CNN
+F 1 "180Ω" V 2175 5150 50  0000 C CNN
+F 2 "" V 2105 5150 50  0001 C CNN
+F 3 "" H 2175 5150 50  0001 C CNN
+	1    2175 5150
+	0    1    1    0   
+$EndComp
+$Comp
+L pedalDriver3-rescue:R-pedalDriver3-rescue R?
+U 1 1 5AAE81C5
+P 3625 4725
+F 0 "R?" V 3705 4725 50  0000 C CNN
+F 1 "180Ω" V 3625 4725 50  0000 C CNN
+F 2 "Resistors_THT:R_Axial_DIN0309_L9.0mm_D3.2mm_P12.70mm_Horizontal" V 3555 4725 50  0001 C CNN
+F 3 "" H 3625 4725 50  0001 C CNN
+	1    3625 4725
+	-1   0    0    1   
+$EndComp
+$Comp
+L pedalDriver3-rescue:R-pedalDriver3-rescue R?
+U 1 1 5AAE81D1
+P 4075 4600
+F 0 "R?" V 4155 4600 50  0000 C CNN
+F 1 "470Ω" V 4075 4600 50  0000 C CNN
+F 2 "Resistors_THT:R_Axial_DIN0309_L9.0mm_D3.2mm_P12.70mm_Horizontal" V 4005 4600 50  0001 C CNN
+F 3 "" H 4075 4600 50  0001 C CNN
+	1    4075 4600
+	-1   0    0    1   
+$EndComp
+$Comp
+L pedalDriver3-rescue:IRF540N-pedalDriver3-rescue Q?
+U 1 1 5AAE81D7
+P 6425 4775
+F 0 "Q?" H 6675 4850 50  0000 L CNN
+F 1 "IRF1310NPBF" H 6675 4775 50  0000 L CNN
+F 2 "TO_SOT_Packages_THT:TO-220_Vertical" H 6675 4700 50  0001 L CIN
+F 3 "" H 6425 4775 50  0001 L CNN
+	1    6425 4775
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:LM7810ACT-pedalDriver3-rescue U?
+U 1 1 5AAE81E3
+P 4925 3975
+F 0 "U?" H 4725 4175 50  0000 C CNN
+F 1 "LM7810ACT" H 4925 4175 50  0000 L CNN
+F 2 "TO_SOT_Packages_THT:TO-220_Vertical" H 4925 4075 50  0001 C CIN
+F 3 "" H 4925 3975 50  0001 C CNN
+	1    4925 3975
+	-1   0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:GND-pedalDriver3-rescue #PWR?
+U 1 1 5AAE81E9
+P 5725 3575
+F 0 "#PWR?" H 5725 3325 50  0001 C CNN
+F 1 "GND" H 5725 3425 50  0000 C CNN
+F 2 "" H 5725 3575 50  0001 C CNN
+F 3 "" H 5725 3575 50  0001 C CNN
+	1    5725 3575
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:C-pedalDriver3-rescue C?
+U 1 1 5AAE8207
+P 4475 4450
+F 0 "C?" H 4500 4550 50  0000 L CNN
+F 1 "1µF" H 4500 4350 50  0000 L CNN
+F 2 "" H 4513 4300 50  0001 C CNN
+F 3 "" H 4475 4450 50  0001 C CNN
+	1    4475 4450
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:BS170-pedalDriver3-rescue Q?
+U 1 1 5AAE81CB
+P 3975 5100
+F 0 "Q?" H 4175 5175 50  0000 L CNN
+F 1 "BS170" H 4175 5100 50  0000 L CNN
+F 2 "TO_SOT_Packages_THT:TO-92_Molded_Narrow" H 4175 5025 50  0001 L CIN
+F 3 "" H 3975 5100 50  0001 L CNN
+	1    3975 5100
+	1    0    0    -1  
+$EndComp
+Text GLabel 7375 1500 2    60   Input ~ 0
++30VDC
+Text GLabel 7375 5350 2    60   Input ~ 0
+-30VDC
+Text GLabel 1900 5150 0    60   Input ~ 0
+Onset
+Text GLabel 1850 3200 0    60   Input ~ 0
+Hold
+$Comp
+L pedalDriver3-rescue:L-pedalDriver3-rescue L?
+U 1 1 5AAE7339
+P 6500 1775
+F 0 "L?" V 6450 1775 50  0000 C CNN
+F 1 "20Ω" V 6575 1775 50  0000 C CNN
+F 2 "" H 6500 1775 50  0001 C CNN
+F 3 "" H 6500 1775 50  0001 C CNN
+	1    6500 1775
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:CP-pedalDriver3-rescue C?
+U 1 1 5AB558F2
+P 5275 6725
+F 0 "C?" H 5300 6825 50  0000 L CNN
+F 1 "4700µF" H 5300 6625 50  0000 L CNN
+F 2 "Capacitors_THT:CP_Radial_D35.0mm_P10.00mm_SnapIn" H 5313 6575 50  0001 C CNN
+F 3 "" H 5275 6725 50  0001 C CNN
+	1    5275 6725
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:CP-pedalDriver3-rescue C?
+U 1 1 5AB5597A
+P 5275 6425
+F 0 "C?" H 5300 6525 50  0000 L CNN
+F 1 "4700µF" H 5300 6325 50  0000 L CNN
+F 2 "Capacitors_THT:CP_Radial_D35.0mm_P10.00mm_SnapIn" H 5313 6275 50  0001 C CNN
+F 3 "" H 5275 6425 50  0001 C CNN
+	1    5275 6425
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:GND-pedalDriver3-rescue #PWR?
+U 1 1 5AB55D08
+P 6075 6575
+F 0 "#PWR?" H 6075 6325 50  0001 C CNN
+F 1 "GND" H 6075 6425 50  0000 C CNN
+F 2 "" H 6075 6575 50  0001 C CNN
+F 3 "" H 6075 6575 50  0001 C CNN
+	1    6075 6575
+	1    0    0    -1  
+$EndComp
+Text GLabel 5725 6275 2    60   Input ~ 0
++30VDC
+Text GLabel 5725 6875 2    60   Input ~ 0
+-30VDC
+$Comp
+L pedalDriver3-rescue:Transformer_1P_SS-pedalDriver3-rescue T?
+U 1 1 5AB58057
+P 1550 6625
+F 0 "T?" H 1550 6875 50  0000 C CNN
+F 1 "Transformer_1P_SS" H 1550 6325 50  0000 C CNN
+F 2 "" H 1550 6625 50  0001 C CNN
+F 3 "" H 1550 6625 50  0001 C CNN
+	1    1550 6625
+	1    0    0    -1  
+$EndComp
+Text GLabel 2200 6425 2    60   Input ~ 0
+30VAC+
+Text GLabel 2225 6825 2    60   Input ~ 0
+30VAC-
+Text GLabel 3925 6575 0    60   Input ~ 0
+30VAC+
+Text GLabel 4525 6575 2    60   Input ~ 0
+30VAC-
+$Comp
+L pedalDriver3-rescue:GND-pedalDriver3-rescue #PWR?
+U 1 1 5AB58AE3
+P 1950 6625
+F 0 "#PWR?" H 1950 6375 50  0001 C CNN
+F 1 "GND" H 1950 6475 50  0000 C CNN
+F 2 "" H 1950 6625 50  0001 C CNN
+F 3 "" H 1950 6625 50  0001 C CNN
+	1    1950 6625
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:AC-pedalDriver3-rescue #PWR?
+U 1 1 5AB59218
+P 1150 6425
+F 0 "#PWR?" H 1150 6325 50  0001 C CNN
+F 1 "AC" H 1150 6675 50  0000 C CNN
+F 2 "" H 1150 6425 50  0001 C CNN
+F 3 "" H 1150 6425 50  0001 C CNN
+	1    1150 6425
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:AC-pedalDriver3-rescue #PWR?
+U 1 1 5AB592B9
+P 1150 6825
+F 0 "#PWR?" H 1150 6725 50  0001 C CNN
+F 1 "AC" H 1150 7075 50  0000 C CNN
+F 2 "" H 1150 6825 50  0001 C CNN
+F 3 "" H 1150 6825 50  0001 C CNN
+	1    1150 6825
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:TLP627-2-pedalDriver3-rescue U?
+U 1 1 5AB59B35
+P 2925 3300
+F 0 "U?" H 2625 3500 50  0000 L CNN
+F 1 "TLP523-2" H 2925 3500 50  0000 L CNN
+F 2 "Housings_DIP:DIP-8_W7.62mm" H 2625 3100 50  0001 L CIN
+F 3 "" H 2925 3300 50  0001 L CNN
+	1    2925 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:TLP627-2-pedalDriver3-rescue U?
+U 2 1 5AB59BCA
+P 2925 5250
+F 0 "U?" H 2625 5450 50  0000 L CNN
+F 1 "TLP523-2" H 2925 5450 50  0000 L CNN
+F 2 "Housings_DIP:DIP-8_W7.62mm" H 2625 5050 50  0001 L CIN
+F 3 "" H 2925 5250 50  0001 L CNN
+	2    2925 5250
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:PWR_FLAG-pedalDriver3-rescue #FLG?
+U 1 1 5AB5A73F
+P 4675 6275
+F 0 "#FLG?" H 4675 6350 50  0001 C CNN
+F 1 "PWR_FLAG" H 4675 6425 50  0000 C CNN
+F 2 "" H 4675 6275 50  0001 C CNN
+F 3 "" H 4675 6275 50  0001 C CNN
+	1    4675 6275
+	-1   0    0    1   
+$EndComp
+$Comp
+L pedalDriver3-rescue:CONN_01X01-pedalDriver3-rescue J?
+U 1 1 5AB5A7BA
+P 10225 3675
+F 0 "J?" H 10225 3775 50  0000 C CNN
+F 1 "CONN_01X01" V 10325 3675 50  0000 C CNN
+F 2 "Connectors:1pin" H 10225 3675 50  0001 C CNN
+F 3 "" H 10225 3675 50  0001 C CNN
+	1    10225 3675
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:PWR_FLAG-pedalDriver3-rescue #FLG?
+U 1 1 5AB5A943
+P 4675 6875
+F 0 "#FLG?" H 4675 6950 50  0001 C CNN
+F 1 "PWR_FLAG" H 4675 7025 50  0000 C CNN
+F 2 "" H 4675 6875 50  0001 C CNN
+F 3 "" H 4675 6875 50  0001 C CNN
+	1    4675 6875
+	-1   0    0    1   
+$EndComp
+$Comp
+L pedalDriver3-rescue:CONN_01X01-pedalDriver3-rescue J?
+U 1 1 5AB5A998
+P 10225 4225
+F 0 "J?" H 10225 4325 50  0000 C CNN
+F 1 "CONN_01X01" V 10325 4225 50  0000 C CNN
+F 2 "Connectors:1pin" H 10225 4225 50  0001 C CNN
+F 3 "" H 10225 4225 50  0001 C CNN
+	1    10225 4225
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:CONN_01X01-pedalDriver3-rescue J?
+U 1 1 5AB5A9E9
+P 10225 4750
+F 0 "J?" H 10225 4850 50  0000 C CNN
+F 1 "CONN_01X01" V 10325 4750 50  0000 C CNN
+F 2 "Connectors:1pin" H 10225 4750 50  0001 C CNN
+F 3 "" H 10225 4750 50  0001 C CNN
+	1    10225 4750
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:CONN_01X01-pedalDriver3-rescue J?
+U 1 1 5AB5A9EF
+P 10225 5300
+F 0 "J?" H 10225 5400 50  0000 C CNN
+F 1 "CONN_01X01" V 10325 5300 50  0000 C CNN
+F 2 "Connectors:1pin" H 10225 5300 50  0001 C CNN
+F 3 "" H 10225 5300 50  0001 C CNN
+	1    10225 5300
+	1    0    0    -1  
+$EndComp
+$Comp
+L pedalDriver3-rescue:PWR_FLAG-pedalDriver3-rescue #FLG?
+U 1 1 5AB5B3C9
+P 5675 6575
+F 0 "#FLG?" H 5675 6650 50  0001 C CNN
+F 1 "PWR_FLAG" H 5675 6725 50  0000 C CNN
+F 2 "" H 5675 6575 50  0001 C CNN
+F 3 "" H 5675 6575 50  0001 C CNN
+	1    5675 6575
+	-1   0    0    1   
+$EndComp
+$Comp
+L pedalDriver3-rescue:D_ALT-pedalDriver3-rescue D?
+U 1 1 5AB80614
+P 6825 1775
+F 0 "D?" H 6825 1675 50  0000 C CNN
+F 1 "STTH30R061PI" V 6925 2075 50  0000 C CNN
+F 2 "TO_SOT_Packages_THT:TO-220-2_Vertical" H 6825 1775 50  0001 C CNN
+F 3 "" H 6825 1775 50  0001 C CNN
+	1    6825 1775
+	0    1    1    0   
+$EndComp
+$Comp
+L pedalDriver3-rescue:L-pedalDriver3-rescue L?
+U 1 1 5AB808E7
+P 5650 1825
+F 0 "L?" V 5600 1825 50  0000 C CNN
+F 1 "20Ω" V 5725 1825 50  0000 C CNN
+F 2 "" H 5650 1825 50  0001 C CNN
+F 3 "" H 5650 1825 50  0001 C CNN
+	1    5650 1825
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3325 3200 3650 3200
+Wire Wire Line
+	3650 3200 3800 3200
+Wire Wire Line
+	3650 2975 3650 3200
+Wire Wire Line
+	4100 2425 3650 2425
+Wire Wire Line
+	3650 1500 3650 2425
+Wire Wire Line
+	3650 2425 3650 2675
+Wire Wire Line
+	4100 2800 4100 2875
+Wire Wire Line
+	4100 2875 4100 2950
+Wire Wire Line
+	4100 2875 5025 2875
+Connection ~ 4100 2875
+Wire Wire Line
+	5325 2625 5325 2525
+Connection ~ 3650 2425
+Wire Wire Line
+	5325 1925 5325 2100
+Wire Wire Line
+	5325 2100 5325 2225
+Wire Wire Line
+	3650 1500 4325 1500
+Wire Wire Line
+	5325 1625 5325 1500
+Wire Wire Line
+	4100 2425 4100 2500
+Wire Wire Line
+	2425 5350 2525 5350
+Wire Wire Line
+	2325 5150 2525 5150
+Connection ~ 3625 5150
+Wire Wire Line
+	4075 4375 3625 4375
+Wire Wire Line
+	3625 3925 3625 4375
+Wire Wire Line
+	3625 4375 3625 4575
+Wire Wire Line
+	4075 4750 4075 4825
+Wire Wire Line
+	4075 4825 4075 4900
+Wire Wire Line
+	4075 4825 6225 4825
+Connection ~ 4075 4825
+Connection ~ 3625 4375
+Wire Wire Line
+	3625 3925 4475 3925
+Wire Wire Line
+	4475 3925 4525 3925
+Wire Wire Line
+	4075 4375 4075 4450
+Wire Wire Line
+	3325 5350 4075 5350
+Wire Wire Line
+	4075 5350 4475 5350
+Wire Wire Line
+	4475 5350 4925 5350
+Wire Wire Line
+	4925 5350 6525 5350
+Wire Wire Line
+	6525 5350 7375 5350
+Wire Wire Line
+	6525 5350 6525 4975
+Wire Wire Line
+	4475 3925 4475 4300
+Wire Wire Line
+	4475 4600 4475 5350
+Connection ~ 4475 5350
+Wire Wire Line
+	4075 5350 4075 5300
+Connection ~ 4075 5350
+Wire Wire Line
+	4925 4225 4925 5350
+Connection ~ 4925 5350
+Connection ~ 3650 3200
+Wire Wire Line
+	3325 5150 3625 5150
+Wire Wire Line
+	3625 5150 3775 5150
+Wire Wire Line
+	3625 4875 3625 5150
+Connection ~ 5325 1500
+Connection ~ 6525 5350
+Connection ~ 5325 2100
+Wire Wire Line
+	1850 3200 2150 3200
+Wire Wire Line
+	1900 5150 2025 5150
+Connection ~ 6500 2100
+Connection ~ 4475 3925
+Connection ~ 6500 1500
+Connection ~ 4325 1500
+Wire Wire Line
+	4325 1500 4325 1925
+Wire Wire Line
+	4225 6275 4675 6275
+Wire Wire Line
+	4675 6275 5275 6275
+Wire Wire Line
+	5275 6275 5725 6275
+Wire Wire Line
+	4225 6875 4675 6875
+Wire Wire Line
+	4675 6875 5275 6875
+Wire Wire Line
+	5275 6875 5725 6875
+Wire Wire Line
+	2200 6425 1950 6425
+Wire Wire Line
+	1950 6825 2225 6825
+Connection ~ 5275 6275
+Connection ~ 5275 6875
+Connection ~ 5275 6575
+Connection ~ 4675 6275
+Connection ~ 4675 6875
+Wire Wire Line
+	6075 6575 5275 6575
+Connection ~ 5325 3575
+Wire Wire Line
+	3325 3575 3325 3400
+Connection ~ 3325 3575
+Wire Wire Line
+	4100 3350 4100 3575
+Connection ~ 4325 3575
+Wire Wire Line
+	5325 3025 5325 3575
+Wire Wire Line
+	5325 3575 5325 3925
+Wire Wire Line
+	4725 3575 4725 1800
+Connection ~ 4725 3575
+Connection ~ 4100 3575
+Wire Wire Line
+	6500 1500 6500 1625
+Wire Wire Line
+	4325 2225 4325 3575
+Wire Wire Line
+	2425 3400 2425 3575
+Wire Wire Line
+	2425 3575 2425 5350
+Connection ~ 2425 3575
+Wire Wire Line
+	2450 3200 2525 3200
+Wire Wire Line
+	2525 3400 2425 3400
+Wire Wire Line
+	2425 3575 3325 3575
+Wire Wire Line
+	3325 3575 4100 3575
+Wire Wire Line
+	4100 3575 4325 3575
+Wire Wire Line
+	4325 3575 4725 3575
+Wire Wire Line
+	4725 3575 5325 3575
+Wire Wire Line
+	5325 3575 5725 3575
+Wire Wire Line
+	6825 1625 6825 1500
+Connection ~ 6825 1500
+Wire Wire Line
+	6825 1925 6825 2100
+Wire Wire Line
+	6825 2100 6500 2100
+Wire Wire Line
+	5650 1500 5650 1675
+Connection ~ 5650 1500
+Wire Wire Line
+	5325 2100 5650 2100
+Wire Wire Line
+	5650 2100 5650 1975
+$Comp
+L pedalDriver3-rescue:TEST_2P-pedalDriver3-rescue J?
+U 1 1 5AB857B6
+P 6500 2575
+F 0 "J?" V 6500 2635 50  0000 C CNN
+F 1 "TEST_2P" V 6650 2750 50  0000 C CNN
+F 2 "" H 6500 2575 50  0001 C CNN
+F 3 "" H 6500 2575 50  0001 C CNN
+	1    6500 2575
+	0    1    1    0   
+$EndComp
+$Comp
+L pedalDriver3-rescue:TEST_1P-pedalDriver3-rescue J?
+U 1 1 5AB858A1
+P 6200 2525
+F 0 "J?" H 6200 2795 50  0000 C CNN
+F 1 "TEST_1P" H 6200 2725 50  0000 C CNN
+F 2 "" H 6400 2525 50  0001 C CNN
+F 3 "" H 6400 2525 50  0001 C CNN
+	1    6200 2525
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	6500 1925 6500 2100
+Wire Wire Line
+	6500 2100 6500 2375
+Wire Wire Line
+	6200 1500 6200 2525
+Connection ~ 6200 1500
+Wire Wire Line
+	6500 2775 6500 3450
+Wire Wire Line
+	6500 3450 6500 3425
+Wire Wire Line
+	6500 3425 6525 4575
+Text Notes 6425 2750 0    60   ~ 0
+1
+Text Notes 6400 2525 0    60   ~ 0
+2
+Text Notes 6125 2600 0    60   ~ 0
+3
+Wire Wire Line
+	5125 1500 5325 1500
+Wire Wire Line
+	5325 1500 5650 1500
+Wire Wire Line
+	5650 1500 6200 1500
+Wire Wire Line
+	6200 1500 6500 1500
+Wire Wire Line
+	6500 1500 6825 1500
+Wire Wire Line
+	6825 1500 7375 1500
+$Comp
+L pedalDriver3-rescue:D_Bridge_+-AA-pedalDriver3-rescue D?
+U 1 1 5AB8F883
+P 4225 6575
+F 0 "D?" V 4600 6925 50  0000 L CNN
+F 1 "D_Bridge_+-AA" V 4700 6450 50  0000 L CNN
+F 2 "" H 4225 6575 50  0001 C CNN
+F 3 "" H 4225 6575 50  0001 C CNN
+	1    4225 6575
+	0    -1   -1   0   
+$EndComp
+$EndSCHEMATC
