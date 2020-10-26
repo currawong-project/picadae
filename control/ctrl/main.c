@@ -1,3 +1,6 @@
+//| Copyright: (C) 2018-2020 Kevin Larke <contact AT larke DOT org>
+//| License: GNU GPL version 3.0 or above. See the accompanying LICENSE file.
+
 // Note this program is designed to pair with c_client.
 // The i2c connection may be made directly between the two Arduino SDA and SCL pins.
 // No i2c pullup resistors are require.d

@@ -1,3 +1,6 @@
+//| Copyright: (C) 2018-2020 Kevin Larke <contact AT larke DOT org>
+//| License: GNU GPL version 3.0 or above. See the accompanying LICENSE file.
+
 // w 60 0  1 10    : w i2c_addr SetPWM enable duty_val
 // w 60 5 12  8 32 : w i2c_addr write addrFl|src coarse_val
 // w 60 4  0  5    : w i2c_addr read  src read_addr  (set the read address to register 5)

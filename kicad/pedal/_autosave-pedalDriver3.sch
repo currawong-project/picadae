@@ -4,13 +4,12 @@ EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
-Title "Pedal Driver"
+Title "Tutorial 1"
 Date ""
 Rev ""
 Comp ""
-
-Comment1 "Copyright: (C) 2018-2020 Bill Bowen, Kevin Larke <contact AT larke DOT org>"
-Comment2 "License: GNU GPL version 3.0 or above. See the accompanying LICENSE file."
+Comment1 ""
+Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
