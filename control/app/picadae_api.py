@@ -16,7 +16,8 @@ class TinyOp(Enum):
     setReadAddr  = 4
     writeOp      = 5
     writeTableOp = 6
-    invalidOp    = 7
+    holdDelayOp  = 7
+    invalidOp    = 8
     
 
 class TinyRegAddr(Enum):
@@ -36,6 +37,9 @@ class TinyRegAddr(Enum):
     kPwmDivAddr      = 13
     kStateAddr       = 14
     kErrorCodeAddr   = 15
+    kMaxAllowTmrAddr = 16
+    kDelayCoarseAddr = 17
+    kDelayFineAddr   = 18
 
 class TinyConst(Enum):
     kRdRegSrcId    = TinyRegAddr.kRdRegAddrAddr.value    # 0
@@ -184,6 +188,7 @@ class Picadae:
         return self.write_tiny_reg( self._pitch_to_i2c_addr( midi_pitch ), op_code, argL )                          
 
     def set_read_addr( self, i2c_addr, mem_id, addr ):
+        # mem_id: 0=reg_array 1=vel_table 2=eeprom
         return self.write_tiny_reg(i2c_addr, TinyOp.setReadAddr.value,[ mem_id, addr ])
                 
     def read_request( self, i2c_addr, reg_addr, byteOutN ):
@@ -246,6 +251,19 @@ class Picadae:
         return self.call_op( midi_pitch, TinyOp.noteOffOp.value,
                            [0] )  # TODO: sending a dummy byte because we can't handle sending a command with no data bytes.
 
+    def set_hold_delay( self, midi_pitch, pulse_usec ):
+        return  self.call_op( midi_pitch, TinyOp.holdDelayOp.value, list(self._usec_to_coarse_and_fine(pulse_usec)) )
+
+    def get_hold_delay( self, midi_pitch, time_out_ms=250 ):
+
+        res = self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kDelayCoarseAddr.value, byteOutN=2, time_out_ms=time_out_ms )
+
+        if len(res.value) == 2:
+            res.value = [ self.prescaler_usec*255*res.value[0] + self.prescaler_usec*res.value[1] ]
+        
+        return res
+        
+    
     def set_velocity_map( self, midi_pitch, midi_vel, pulse_usec ):
         coarse,fine = self._usec_to_coarse_and_fine( pulse_usec )
         src         = TinyConst.kWrAddrFl.value | TinyConst.kWrTableDstId.value
@@ -258,7 +276,7 @@ class Picadae:
 
     def set_pwm_duty( self, midi_pitch, duty_cycle_pct ):
         if 0 <= duty_cycle_pct and duty_cycle_pct <= 100:
-            duty_cycle_pct = 100.0 - duty_cycle_pct
+            # duty_cycle_pct = 100.0 - duty_cycle_pct
             return self.call_op( midi_pitch, TinyOp.setPwmOp.value, [ int( duty_cycle_pct * 255.0 /100.0 )])
         else:
             return Result(msg="Duty cycle (%f) out of range 0-100." % (duty_cycle_pct))
@@ -279,6 +297,15 @@ class Picadae:
     def get_pwm_div( self, midi_pitch, time_out_ms=250 ):
         return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kPwmDivAddr.value, time_out_ms=time_out_ms )
 
+    def set_pwm_div( self, midi_pitch, div, time_out_ms=250 ):
+        res = self.get_pwm_duty( midi_pitch )
+        if res:
+            duty = res.value[0]
+            res = self.get_pwm_freq( midi_pitch )
+            if res:
+                res = self.call_op( midi_pitch, TinyOp.setPwmOp.value, [ int(duty), int(res.value[0]), int(div) ])
+        return res
+    
     def write_table( self, midi_pitch, time_out_ms=250 ):
         # TODO: sending a dummy byte because we can't handle sending a command with no data bytes.
         return self.call_op( midi_pitch, TinyOp.writeTableOp.value,[0])
