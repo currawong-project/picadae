@@ -44,8 +44,9 @@ enum
  kNoteOff_Op        =  3,  // Turn off note         5
  kSetReadAddr_Op    =  4,  // Set a read addr.      6 {<src>} {<addr>} }  src: 0=reg 1=table 2=eeprom
  kWrite_Op          =  5,  // Set write             7 {<addrfl|src> {addr}  {<value0> ... {<valueN>}}  addrFl:0x80  src: 4=reg 5=table 6=eeprom
- kWriteTable_Op     =  6,  // Write table to EEprom 9 
- kInvalid_Op        =  7   //                                             
+ kWriteTable_Op     =  6,  // Write table to EEprom 9
+ kHoldDelay_Op      =  7,  // Set hold delay          {<coarse> {<fine>}}
+ kInvalid_Op        =  8   //                                             
 };
 
 
@@ -72,6 +73,10 @@ enum
  kState_idx          = 14, // 1=attk 2=hold
  kError_Code_idx     = 15, // Error Code
  kMax_Coarse_Tmr_idx = 16, // Max. allowable coarse timer value
+
+ kDelay_Coarse_idx   = 17, // (17,18)=2000 (0,6)=100
+ kDelay_Fine_idx     = 18,
+ 
  kMax_idx
 };
 
@@ -99,12 +104,16 @@ volatile uint8_t ctl_regs[] =
    4,                // 10 (1-5)    4=16us per tick
    
  127,                // 11 (0-255)  Pwm Duty cycle
- 254,                // 12 (0-255)  Pwm Frequency  (123 Hz)
-  10,                // 13 (0-15)   Pwm clock div 
+ 255,                // 12 (0-255)  Pwm Frequency  (123 Hz)
+   5,                // 13 (0-15)   Pwm clock div 
    
    0,                // 14 state flags 1=attk   2=hold  (read/only)
    0,                // 15 (0-255)  Error bit field
    14,               // 16 (0-255) Max allowable coarse timer count
+
+   0,                // 17 (0-255) Hold coarse delay  
+   6               // 18 (0-255) Hold fine delay    0,6=100us 0,124=2000us w/ 16us Tmr0 tick
+   
 };
 
 // These registers are saved to Eeprom
@@ -208,6 +217,34 @@ volatile uint8_t hold_state = 0;  // state=0 hold should not be set, state=1 hol
 #define clear_hold() PORTB &= ~(_BV(HOLD_PIN))
 #define set_hold()   PORTB |= _BV(HOLD_PIN)
 
+
+void hold_begin()
+{
+  hold_state = 1;
+  
+  // Reset the PWM counter to to OCR1C (PWM TOP) so that it immediately triggers
+  // set_hold() and latches any new value for OCR1B (See: 12.2.2 Timer/Counter1 in PWM Mode)
+  // If this is not done and OCR1B was modified the first pulse will have the incorrect length.
+  TCNT1   = ctl_regs[kPwm_Freq_idx];  
+  TIMSK  |= _BV(OCIE1B) + _BV(TOIE1);    // PWM interupt Enable interrupts
+
+  TCCR1  |= ctl_regs[ kPwm_Div_idx];     // 32us period (512 divider) prescaler
+  GTCCR  |= _BV(PSR1);                   // Force the pre-scale to be latched by setting PSR1
+  
+}
+
+void hold_end()
+{
+  clear_hold();
+  TIMSK  &= ~_BV(OCIE0A);                // Clear timer interrupt (shouldn't be necessary but doesn't hurt on during note-off message)
+  TIMSK  &= ~(_BV(OCIE1B) + _BV(TOIE1)); // PWM interupt disable interrupts
+
+  TCCR1  = 0;              // Stop the PWM timer by setting the pre-scale to 0
+  GTCCR  |= _BV(PSR1);     // Force the pre-scale to be latched by setting PSR1
+  
+  hold_state = 0;
+}
+
 // Use the current tmr0 ctl_reg[] values to set the timer to the starting state.
 void tmr0_reset()
 {
@@ -216,7 +253,11 @@ void tmr0_reset()
   PORTB                |= _BV(ATTK_PIN);   // set the attack pin
   clear_hold();                            // clear the hold pin
   hold_state = 0;
+
+  tmr0_state = 1;
+  OCR0A      = 0xff;
   
+  /*
   // if a coarse count exists then go into coarse mode 
   if( ctl_regs[kTmr_Coarse_idx] > 0 )
   {
@@ -228,6 +269,7 @@ void tmr0_reset()
     tmr0_state = 2;
     OCR0A     = ctl_regs[kTmr_Fine_idx];
   }
+  */
   
   TCNT0  = 0;
   TIMSK |= _BV(OCIE0A);     // enable the timer interrupt
@@ -237,32 +279,50 @@ ISR(TIMER0_COMPA_vect)
 {
   switch( tmr0_state )
   {
-    case 0:
-      // timer is disabled
+    case 0: // timer disabled
       break;
 
-    case 1: 
-      // coarse mode
-      if( ++tmr0_coarse_cur >= ctl_regs[kTmr_Coarse_idx] )
+    case 1: // attack coarse mode
+      // Note: the '+1' here is necessary to absorb an interrupt which is occurring
+      // for an unknown reason.  It must have something to do with resetting the
+      // OCIE0A interrupt because it doesn't occur on the hold delay coarse timing.
+      if( ++tmr0_coarse_cur >= ctl_regs[kTmr_Coarse_idx]+1 )
       {
-        tmr0_state  = 2;
-        OCR0A     = ctl_regs[kTmr_Fine_idx];        
+        tmr0_state = 2;
+        OCR0A      = ctl_regs[kTmr_Fine_idx];        
       }
       break;
 
-    case 2:
-      // fine mode
-
-      // This marks the end of a timer period 
-
+    case 2: // attack fine mode
       clear_attack();
 
-      TCNT1      = 0;   // reset the PWM counter to 0
-      hold_state = 1;   // enable the hold output
-      TIMSK  |= _BV(OCIE1B) + _BV(TOIE1);  // PWM interupt Enable interrupts          
-      TIMSK &= ~_BV(OCIE0A);               // clear timer interrupt
-      
+      // if a coarse delay count exists then go into coarse mode 
+      if( ctl_regs[kDelay_Coarse_idx] > 0 )
+      {
+        tmr0_state      = 3;
+        tmr0_coarse_cur = 0;
+        OCR0A           = 0xff;
+      }
+      else // otherwise go into fine mode
+      {
+        tmr0_state = 4;
+        OCR0A      = ctl_regs[kDelay_Fine_idx];
+      }
       break;
+
+    case 3: // coarse hold delay
+      if( ++tmr0_coarse_cur >= ctl_regs[kDelay_Coarse_idx] )
+      {
+        tmr0_state = 4;
+        OCR0A      = ctl_regs[kDelay_Fine_idx];        
+      }      
+      break;
+      
+    case 4: // hold delay end
+      TIMSK      &= ~_BV(OCIE0A);    // clear timer interrupt
+      tmr0_state  = 0;
+      hold_begin();
+      break;      
   }
 }
 
@@ -270,9 +330,11 @@ ISR(TIMER0_COMPA_vect)
 void tmr0_init()
 {
   TIMSK  &= ~_BV(OCIE0A);                 // Disable interrupt TIMER1_OVF
+  TCCR0A = 0;                             // Set the timer control registers to their default value
+  TCCR0B = 0;
   TCCR0A  |=  0x02;                       // CTC mode
   TCCR0B  |= ctl_regs[kTmr_Prescale_idx]; // set the prescaler
-  GTCCR   |= _BV(PSR0);                   // Set the pre-scaler to the selected value
+  GTCCR   |= _BV(PSR0);                   // Trigger the pre-scaler to be reset to the selected value
 }
 
 
@@ -297,27 +359,24 @@ void pwm1_update()
 // At this point TCNT1 is reset to 0, new OCR1B values are latched from temp. loctaion to OCR1B
 ISR(TIMER1_OVF_vect)
 {
-  clear_hold();
+  set_hold();
 }
 
 // Called when TCNT1 == OCR1B
 ISR(TIMER1_COMPB_vect)
 {
-  if(hold_state)
-    set_hold();
+  clear_hold();
 }
 
 
 void pwm1_init()
 {
-  TIMSK  &= ~(_BV(OCIE1B) + _BV(TOIE1));    // Disable interrupts
-  
   DDRB   |=  _BV(HOLD_DIR);  // setup PB3 as output
-
-  TCCR1  |= ctl_regs[ kPwm_Div_idx];    // 32us period (512 divider) prescaler
+  
+  TCCR1 = 0; // Set the control registers to their default
+  GTCCR = 0;
   GTCCR  |= _BV(PWM1B);    // Enable PWM B and disconnect output pins
-  GTCCR  |= _BV(PSR1);     // Set the pre-scaler to the selected value
-
+  
   pwm1_update();
 
 }
@@ -462,14 +521,6 @@ void on_receive( uint8_t byteN )
       for(i=0; i<stack_idx && i<3; ++i)
         ctl_regs[ kPwm_Duty_idx + i ] = stack[i];
 
-      // if the PWM prescaler was changed
-      if( i == 3 )
-      {
-        cli();
-        pwm1_init();
-        sei();
-      }
-      
       pwm1_update();
       break;
 
@@ -496,9 +547,7 @@ void on_receive( uint8_t byteN )
       break;
 
     case kNoteOff_Op:
-      TIMSK  &= ~_BV(OCIE0A);                // clear timer interrupt (shouldn't be necessary)
-      //TIMSK  &= ~(_BV(OCIE1B) + _BV(TOIE1)); // PWM interupt disable interrupts
-      hold_state = 0;
+      hold_end();
       break;
 
     case kSetReadAddr_Op:
@@ -518,6 +567,11 @@ void on_receive( uint8_t byteN )
     case kWriteTable_Op:
       write_table();
       break;
+
+    case kHoldDelay_Op:
+      for(i=0; i<stack_idx && i<2; ++i)
+        ctl_regs[ kDelay_Coarse_idx + i ] = stack[i];
+      
   }
 }
 
