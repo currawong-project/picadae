@@ -3,6 +3,9 @@
 
 Arguments in curly braces are optional.
 
+------------------------------------------------------------------------------------------
+
+Hold PWM Duty Cycle
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -16,7 +19,6 @@ Arguments | Range | Default | Note
 
 PWM frequency and period for each possible (div) setting.
 
-Reg.  |      | Base        | 
 Value | Div  | Frequency   | Period
 ------|------|-------------|-------
  1    |    1 |    16    M  | 62.5 n 
@@ -35,6 +37,9 @@ Value | Div  | Frequency   | Period
 14    | 8192 | 1953.125 Hz |  512 u
 15    |16384 | 976.6625 Hz | 1024 u 
 
+------------------------------------------------------------------------------------------
+
+Note-on Velocity
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -48,6 +53,9 @@ Execute a note onset.
 The (vel) value is translated to an attack pulse duration
 by looking up the pulse tick count in the velocity table.
 
+------------------------------------------------------------------------------------------
+
+Note-on Microseconds
 
 Function                 | Opcode | Arguments
 -------------------------|--------|-------------------------------------------------
@@ -67,12 +75,20 @@ ticks to micoseconds:
     usecs = (pulse-ticks * 1e6)*(256/16e6)
 
 
+------------------------------------------------------------------------------------------
+
+Note-off
+
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
 Note off                 |   3    | None
 
 Turn off a sounding note by settting the hold-voltage to 0.
 
+
+------------------------------------------------------------------------------------------
+
+Set Read Address
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -84,18 +100,24 @@ The read can come from one of three memory banks:
 Register File, MIDI velocity table or EEPROM.
 See the _Memory Location Id_ table below for the (src) id values.
 
-
 Arguments   | Range | Default | Note
 ------------|-------|---------|-------------------------------------------------------
 (src)       | 0-2   |  n/a    | Memory location id. See _Memory Location Id_ table.
 (addr)      | 0-255 |  n/a    | Offset from base address set by (src)
 
 
+------------------------------------------------------------------------------------------
+
+Write Memory
+
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
 Write memory             |    5   |
 
 
+------------------------------------------------------------------------------------------
+
+Set Hold Delay
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -106,6 +128,9 @@ hold voltage is applied.
 The high and low byte values are calculated identically to the
 attack pulse duration values.
 
+------------------------------------------------------------------------------------------
+
+Set *flags* variable 
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -117,8 +142,10 @@ Set flags variable       |    7   | (flags)
 
 _HOA_ : Set to apply the hold voltage at the beginning of the attack.
 
+------------------------------------------------------------------------------------------
 
-Register file
+Register File Address
+
 
 Address | Label           | Note
 --------|-----------------|------------------------------------------------------------------------------------------------
@@ -143,6 +170,8 @@ Address | Label           | Note
 18      | Delay_Low_Addr  | Hold delay onset tick count low byte
 19      | Flags_Addr      | Binary variable field.
 
+
+------------------------------------------------------------------------------------------
 
 Memory Location Id table.
 
