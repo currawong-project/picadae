@@ -207,13 +207,6 @@ Address | Label           | Note
 ------------------------------------------------------------------------------------------
 
 
-## Memory Destination Id table
-
-Id | Memory         | Note
----|----------------|-------------------------------
- 4 | Register file  | See register table file
- 5 | Velocity table | MIDI velocity to pulse ticks lookup table
- 6 | EEPROM         | EEPROM data memory
 
 
 
