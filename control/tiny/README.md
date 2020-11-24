@@ -5,7 +5,7 @@ Arguments in curly braces are optional.
 
 ------------------------------------------------------------------------------------------
 
-Hold PWM Duty Cycle
+__Hold PWM Duty Cycle__
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -39,7 +39,7 @@ Value | Div  | Frequency   | Period
 
 ------------------------------------------------------------------------------------------
 
-Note-on Velocity
+__Note-on Velocity__
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -55,7 +55,7 @@ by looking up the pulse tick count in the velocity table.
 
 ------------------------------------------------------------------------------------------
 
-Note-on Microseconds
+__Note-on Microseconds__
 
 Function                 | Opcode | Arguments
 -------------------------|--------|-------------------------------------------------
@@ -77,7 +77,7 @@ ticks to micoseconds:
 
 ------------------------------------------------------------------------------------------
 
-Note-off
+__Note-off__
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -88,7 +88,7 @@ Turn off a sounding note by settting the hold-voltage to 0.
 
 ------------------------------------------------------------------------------------------
 
-Set Read Address
+__Set Read Address__
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -108,7 +108,7 @@ Arguments   | Range | Default | Note
 
 ------------------------------------------------------------------------------------------
 
-Write Memory
+__Write Memory__
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -117,7 +117,7 @@ Write memory             |    5   |
 
 ------------------------------------------------------------------------------------------
 
-Set Hold Delay
+__Set Hold Delay__
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -130,7 +130,7 @@ attack pulse duration values.
 
 ------------------------------------------------------------------------------------------
 
-Set *flags* variable 
+__Set *flags* variable__
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
@@ -144,7 +144,7 @@ _HOA_ : Set to apply the hold voltage at the beginning of the attack.
 
 ------------------------------------------------------------------------------------------
 
-Register File Address
+## Register File Address
 
 
 Address | Label           | Note
@@ -173,7 +173,7 @@ Address | Label           | Note
 
 ------------------------------------------------------------------------------------------
 
-Memory Location Id table.
+## Memory Location Id table
 
 Id | Memory         | Note
 ---|----------------|-------------------------------
