@@ -98,12 +98,20 @@ Set the source and address of the next I2C read request.
 
 The read can come from one of three memory banks:
 Register File, MIDI velocity table or EEPROM.
-See the _Memory Location Id_ table below for the (src) id values.
+See the _Memory Source Id Table_ below for the (src) id values.
 
 Arguments   | Range | Default | Note
 ------------|-------|---------|-------------------------------------------------------
-(src)       | 0-2   |  n/a    | Memory location id. See _Memory Location Id_ table.
+(src)       | 0-2   |  n/a    | Memory location id. See _Memory Source Id Table_.
 (addr)      | 0-255 |  n/a    | Offset from base address set by (src)
+
+Memory Source Id Table
+
+Id | Memory         | Note
+---|----------------|-------------------------------
+ 0 | Register file  | See register table file
+ 1 | Velocity table | MIDI velocity to pulse ticks lookup table
+ 2 | EEPROM         | EEPROM data memory
 
 
 ------------------------------------------------------------------------------------------
@@ -111,8 +119,33 @@ Arguments   | Range | Default | Note
 __Write Memory__
 
 Function                 | Opcode | Arguments
+-------------------------|--------|--------------------------------------------
+Write memory             |    5   | (addrFl + dest) {(addr)} (value0) ... (valueN)
+
+
+Arguments   | Range | Default | Note
+------------|-------|---------|----------------------------------------------------------------
+(addrFl)    | 0,127 |    0    | Address flag. Set if second byte is an (addr) and not (value0)
+(dest)      | 0-2   |  n/a    | Memory destination location. See _Memory Destination Id Table_.
+(addr)      | 0-255 |  n/a    | Optional offset from base address set by (dest)
+
+Memory Destination Id Table
+
+Id | Memory         | Note
+---|----------------|-------------------------------
+ 4 | Register file  | See register table file
+ 5 | Velocity table | MIDI velocity to pulse ticks lookup table
+ 6 | EEPROM         | EEPROM data memory
+
+------------------------------------------------------------------------------------------
+
+__Write Velocity Table to EEPROM__
+
+Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
-Write memory             |    5   |
+Write velocity table     |    6   | 
+
+Writes the MIDI velocity table from memory to EEPROM.
 
 
 ------------------------------------------------------------------------------------------
@@ -121,7 +154,7 @@ __Set Hold Delay__
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
-Set hold delay           |    6   | { high {low}}
+Set hold delay           |    7   | { high {low}}
 
 Set the length of the delay, in ticks, between when the attack pulse ends and when the
 hold voltage is applied.
@@ -134,7 +167,7 @@ __Set *flags* variable__
 
 Function                 | Opcode | Arguments
 -------------------------|--------|---------------------------
-Set flags variable       |    7   | (flags)
+Set flags variable       |    8   | (flags)
 
   7  |  6  |  5  |  4  |  3  |  2  |  1  |  0  
 -----|-----|-----|-----|-----|-----|-----|-----
@@ -173,13 +206,14 @@ Address | Label           | Note
 
 ------------------------------------------------------------------------------------------
 
-## Memory Location Id table
+
+## Memory Destination Id table
 
 Id | Memory         | Note
 ---|----------------|-------------------------------
- 0 | Register file  | See register table file
- 1 | Velocity table | MIDI velocity to pulse ticks lookup table
- 2 | EEPROM         | EEPROM data memory
+ 4 | Register file  | See register table file
+ 5 | Velocity table | MIDI velocity to pulse ticks lookup table
+ 6 | EEPROM         | EEPROM data memory
 
 
 
