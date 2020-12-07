@@ -40,13 +40,16 @@ Change Activity:
 /********************************************************************************
                                     includes
 ********************************************************************************/
-
+#include <stddef.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
 #include "usiTwiSlave.h"
 //#include "../common/util.h"
 
+//request_func_t _onTwiDataRequest = NULL;
+request_func_t usi_onRequestPtr = NULL;
+receive_func_t usi_onReceiverPtr = NULL;
 
 /********************************************************************************
                             device dependent defines

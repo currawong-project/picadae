@@ -36,6 +36,7 @@ Change Activity:
 
 
 
+
 /********************************************************************************
 
                                     includes
@@ -52,17 +53,26 @@ Change Activity:
 
 ********************************************************************************/
 
+
 void    usiTwiSlaveInit( uint8_t );
 void    usiTwiTransmitByte( uint8_t );
 uint8_t usiTwiReceiveByte( void );
 bool    usiTwiDataInReceiveBuffer( void );
-void    (*_onTwiDataRequest)(void);
+//void    (*_onTwiDataRequest)(void);
+
+//extern request_func_t _onTwiDataRequest;
+
 bool    usiTwiDataInTransmitBuffer(void);
 uint8_t usiTwiAmountDataInReceiveBuffer(void);
 // on_XXX handler pointers
-void    (*usi_onRequestPtr)(void);
-void    (*usi_onReceiverPtr)(uint8_t);
+//void    (*usi_onRequestPtr)(void);
+//void    (*usi_onReceiverPtr)(uint8_t);
 
+typedef void (*request_func_t)(void);
+typedef void (*receive_func_t)(uint8_t);
+
+extern request_func_t usi_onRequestPtr;
+extern receive_func_t usi_onReceiverPtr;
 
 /********************************************************************************
 
