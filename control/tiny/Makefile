@@ -7,7 +7,7 @@ TTY=/dev/ttyACM0
 endif
 
 ifndef TARGET
-TARGET=i2c_timer_pwm
+TARGET=i2c_timer_pwm_2
 endif
 
 MCU=attiny85
