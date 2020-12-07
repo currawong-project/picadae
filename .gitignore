@@ -1,0 +1,4 @@
+*.elf
+*.hex
+*.pyc
+_autosave*
