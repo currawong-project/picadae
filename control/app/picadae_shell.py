@@ -27,9 +27,12 @@ class PicadaeShell:
             'f':{ "func":"get_pwm_freq",   "minN":1,  "maxN":1, "help":"pwm freq <pitch>"},
             'I':{ "func":"set_pwm_div",    "minN":2,  "maxN":2, "help":"pwm div <pitch> <div> div:2=2,3=4,4=8,(5)=16 1us,6=32,7=64,8=128,9=256,10=512 32us, 11=1024,12=2048,13=4096,14=8192,15=16384"},
             'i':{ "func":"get_pwm_div",    "minN":1,  "maxN":1, "help":"pwm div <pitch>"},
+            'A':{ "func":"set_flags",      "minN":2,  "maxN":2, "help":"set flags <pitch> <flags>"},
+            'a':{ "func":"get_flags",      "minN":1,  "maxN":1, "help":"get flags <pitch>"},
             'W':{ "func":"write_table",    "minN":1,  "maxN":1, "help":"write_table <pitch>"},
             'N':{ "func":"make_note",      "minN":3,  "maxN":3, "help":"note <pitch> <atkUs> <durMs>"},
-            'S':{ "func":"make_seq",       "minN":5,  "maxN":5, "help":"seq  <pitch> <atkUs> <durMs> <deltaUs> <note_count>"}, 
+            'S':{ "func":"make_seq",       "minN":5,  "maxN":5, "help":"seq  <pitch> <atkUs> <durMs> <deltaUs> <note_count>"},
+            'C':{ "func":"make_scale",     "minN":4,  "maxN":4, "help":"scale <pitch0> <pitch1> <atkUs> <durMs>"},
             'L':{ "func":"set_log_level",  "minN":1,  "maxN":1, "help":"log <level> (0-1)."}
             }
 

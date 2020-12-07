@@ -17,7 +17,8 @@ class TinyOp(Enum):
     writeOp      = 5
     writeTableOp = 6
     holdDelayOp  = 7
-    invalidOp    = 8
+    flagsOp      = 8
+    invalidOp    = 9
     
 
 class TinyRegAddr(Enum):
@@ -40,7 +41,22 @@ class TinyRegAddr(Enum):
     kMaxAllowTmrAddr = 16
     kDelayCoarseAddr = 17
     kDelayFineAddr   = 18
+    kFlagsAddr       = 19
+    
+class TinyRegAddr0(Enum):
+    kRdRegAddrAddr   =  0
+    kRdSrcAddr       =  1
+    kWrRegAddrAddr   =  2
+    kWrDstAddr       =  3
+    kAttkDutyAddr    =  4
+    kAttkDurHiAddr   =  5
+    kAttkDurLoAddr   =  6
+    kDecayStepAddr   =  7
+    kDecayDecrAddr   =  8
+    kPwmDutyAddr     =  9
+    kErrorCodeAddr   = 10
 
+    
 class TinyConst(Enum):
     kRdRegSrcId    = TinyRegAddr.kRdRegAddrAddr.value    # 0
     kRdTableSrcId  = TinyRegAddr.kRdTableAddrAddr.value  # 1
@@ -263,6 +279,14 @@ class Picadae:
         
         return res
         
+    def set_flags( self, midi_pitch, flags ):
+        return  self.call_op( midi_pitch, TinyOp.flagsOp.value, [int(flags)] )
+        #return  self.call_op( midi_pitch, 5, [int(flags)] )
+
+    def get_flags( self, midi_pitch, time_out_ms=250 ):        
+         return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kFlagsAddr.value, byteOutN=1, time_out_ms=time_out_ms )
+         #return self.block_on_picadae_read_reg( midi_pitch, TinyRegAddr.kAttkDutyAddr.value, byteOutN=1, time_out_ms=time_out_ms )
+     
     
     def set_velocity_map( self, midi_pitch, midi_vel, pulse_usec ):
         coarse,fine = self._usec_to_coarse_and_fine( pulse_usec )
@@ -321,7 +345,18 @@ class Picadae:
             self.make_note( midi_pitch, base_atk_us + i*delta_us, dur_ms )
             time.sleep( dur_ms / 1000.0 )
         return Result()
+    
+    def make_scale( self, pitch0, pitch1, atk_us, dur_ms ):
 
+        if pitch0>pitch1:
+            printf("pitch0 must be <= pitch1")
+        else:
+            for pitch in range(pitch0,pitch1+1):            
+                self.make_note( pitch, atk_us, dur_ms )
+                time.sleep( dur_ms / 1000.0 )
+            return Result()
+            
+    
     def set_log_level( self, log_level ):
         self.log_level = log_level
         return Result()
@@ -344,6 +379,17 @@ class Picadae:
 
         x = coarse*coarse_usec + fine*self.prescaler_usec
         
+
+
+        ##### 
+        # n = int(16e6*usec/(256*1e6))
+
+        # coarse = n >> 8;
+        # fine   = n & 0xff;
+
+        # x = usec
+        ####
+
         print("C:%i F:%i : %i %i (%i)" % (coarse,fine, x, usec, usec-x ))
 
         return coarse,fine
