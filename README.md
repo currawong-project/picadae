@@ -1,8 +1,8 @@
 # Currawong Picadae
 
 The Currawong Picadae is a portable piano player unit __very__ inspired by
-the designs of [Gotfried-Willem Raes](https://en.wikipedia.org/wiki/Godfried-Willem_Raes)
-[PlayerPiano II](https://logosfoundation.org/instrum_gwr/playerpiano.html) of the [Logos Foundation](https://www.logosfoundation.org/).
+[PlayerPiano II](https://logosfoundation.org/instrum_gwr/playerpiano.html) as created by [Gotfried-Willem Raes](https://en.wikipedia.org/wiki/Godfried-Willem_Raes)
+ of the [Logos Foundation](https://www.logosfoundation.org/).
 
 
 # CML Picadae hardware and a control files.
