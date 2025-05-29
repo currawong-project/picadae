@@ -1,8 +1,11 @@
 # Currawong Picadae
 
-The Currawong Picadae is a portable piano player unit __very__ inspired by
+The Currawong Picadae is a portable piano player unit inspired by
 [PlayerPiano II](https://logosfoundation.org/instrum_gwr/playerpiano.html) as created by [Gotfried-Willem Raes](https://en.wikipedia.org/wiki/Godfried-Willem_Raes)
- of the [Logos Foundation](https://www.logosfoundation.org/).
+ of the [Logos Foundation](https://www.logosfoundation.org/).  This project
+ was a collaboration between [Currawong Project](https://curawongproject.org) and
+ Bill Bowen and Chico McMurtrie of [Amorphic Robot Works](https://amorphicrobotworks.org/).
+
 
 
 # CML Picadae hardware and a control files.
